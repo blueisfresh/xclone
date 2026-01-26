@@ -1,0 +1,3 @@
+CREATE USER xclone WITH PASSWORD 'xclone';
+CREATE DATABASE xclone OWNER xclone;
+GRANT ALL PRIVILEGES ON DATABASE xclone TO xclone;
