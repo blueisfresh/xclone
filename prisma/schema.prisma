@@ -1,0 +1,150 @@
+generator client {
+  provider   = "prisma-client"
+  output     = "./generated"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String
+  username       String?
+  newuser        Boolean?
+  hashedpassword String?
+  googleid       String?
+  provider       String?
+  createdat      DateTime? @db.Timestamptz
+
+  // Relations
+  profile               Profile?
+  sessions              Session[]
+  posts                 Post[]
+  likes                 Like[]
+  reposts               Repost[]
+  messages              Message[]
+  notificationsSent     Notification[] @relation("NotificationSender")
+  notificationsReceived Notification[] @relation("NotificationRecipient")
+
+  following UserFollows[] @relation("UserFollowing")
+  followers UserFollows[] @relation("UserFollowers")
+
+  chatsStarted  Chat[] @relation("ChatUser")
+  chatsReceived Chat[] @relation("ChatParticipant")
+}
+
+model Profile {
+  id      Int       @id @default(autoincrement())
+  name    String
+  bio     String?
+  img     String?
+  website String?
+  dob     DateTime? @db.Timestamptz
+
+  userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id             Int       @id @default(autoincrement())
+  refreshtoken   String
+  expirationtime DateTime  @db.Timestamptz
+  createdat      DateTime? @db.Timestamptz
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  content   String
+  createdat DateTime? @db.Timestamptz
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
+
+  parentpostid Int?
+  parent       Post?  @relation("PostReplies", fields: [parentpostid], references: [id])
+  replies      Post[] @relation("PostReplies")
+
+  likes   Like[]
+  reposts Repost[]
+}
+
+model Like {
+  id        Int       @id @default(autoincrement())
+  createdat DateTime? @db.Timestamptz
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model Repost {
+  id        Int       @id @default(autoincrement())
+  createdat DateTime? @db.Timestamptz
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model UserFollows {
+  userid     Int
+  followerid Int
+
+  user     User @relation("UserFollowers", fields: [userid], references: [id])
+  follower User @relation("UserFollowing", fields: [followerid], references: [id])
+
+  @@id([userid, followerid])
+}
+
+model Chat {
+  id Int @id @default(autoincrement())
+
+  userId        Int
+  participantId Int
+
+  user        User @relation("ChatUser", fields: [userId], references: [id])
+  participant User @relation("ChatParticipant", fields: [participantId], references: [id])
+
+  messages Message[]
+}
+
+model Message {
+  id        Int       @id @default(autoincrement())
+  content   String
+  createdat DateTime? @db.Timestamptz
+  read      Boolean?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  chatId Int?
+  chat   Chat? @relation(fields: [chatId], references: [id])
+}
+
+model Notification {
+  id         Int       @id @default(autoincrement())
+  type       String
+  objecttype String
+  objecturi  Int
+  read       Boolean?
+  createdat  DateTime? @db.Timestamptz
+
+  senderid Int
+  sender   User @relation("NotificationSender", fields: [senderid], references: [id])
+
+  recipientid Int
+  recipient   User @relation("NotificationRecipient", fields: [recipientid], references: [id])
+}
