@@ -28,23 +28,23 @@ export default async function UserPage() {
                             Email
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Is New User?
+                            Is this a New User ?
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            GoogleId
+                            Google Id
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             Provider
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Created At?
+                            Created At
                         </th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                     {users.length === 0 ? (
                         <tr>
-                            <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                            <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                                 Nothing to show here
                             </td>
                         </tr>
