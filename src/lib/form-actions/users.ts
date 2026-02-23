@@ -4,34 +4,44 @@ import { createUser, updateUser } from "@/lib/actions/users";
 
 export async function createUserAction(formData: FormData) {
     const email = formData.get("email") as string;
-    const username = formData.get("username") as string | null;
-    const googleid = formData.get("googleid") as string | null;
-    const provider = formData.get("provider") as string | null;
-    const newuser = formData.get("newuser") === "true"; // String → Boolean
+    const username = (formData.get("username") as string) || null;
+    const provider = (formData.get("provider") as string) || null; // "google" | "apple"
+    const providerId = (formData.get("providerId") as string) || null; // dynamic field
+    const newuser = formData.get("newuser") === "true";
 
-    await createUser({
+    // Map to your schema fields
+    const data: any = {
         email,
         username,
-        googleid,
         provider,
         newuser,
-    });
+    };
+
+    if (provider === "google") data.googleid = providerId;
+    if (provider === "apple") data.appleid = providerId; // add this column if not present
+
+    await createUser(data);
 }
 
 export async function updateUserAction(formData: FormData) {
-    const id = Number(formData.get("id"));
+    const id = Number(formData.get("id") || 0);
     const email = formData.get("email") as string | undefined;
-    const username = formData.get("username") as string | null | undefined;
-    const googleid = formData.get("googleid") as string | null | undefined;
-    const provider = formData.get("provider") as string | null | undefined;
-    const newuser =
-        formData.get("newuser") === "true" ? true : formData.get("newuser") === "false" ? false : null;
+    const username = (formData.get("username") as string) || undefined;
+    const provider = (formData.get("provider") as string) || undefined;
+    const providerId = (formData.get("providerId") as string) || undefined;
+    const newuserStr = formData.get("newuser") as string | null;
 
-    await updateUser(id, {
-        email,
-        username,
-        googleid,
-        provider,
-        newuser,
-    });
+    const data: any = { email, username, provider };
+
+    if (newuserStr !== null) data.newuser = newuserStr === "true";
+
+    if (provider === "google") {
+        data.googleid = providerId ?? null;
+        data.appleid = null;
+    } else if (provider === "apple") {
+        data.appleid = providerId ?? null;
+        data.googleid = null;
+    }
+
+    await updateUser(id, data);
 }

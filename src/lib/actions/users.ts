@@ -10,10 +10,10 @@ export async function getUsers(): Promise<User[]> {
                 id: true,
                 email: true,
                 username: true,
-                newuser: true,
-                googleid: true,
+                newUser: true,
+                providerId: true,
                 provider: true,
-                createdat: true,
+                createdAt: true,
                 // Include the profile relation
                 profile: {
                     select: {
@@ -51,7 +51,7 @@ export async function updateUser(
         username?: string | null;
         newuser?: boolean | null;
         hashedpassword?: string | null;
-        googleid?: string | null;
+        providerId?: string | null;
         provider?: string | null;
     }
 ): Promise<User> {
@@ -63,10 +63,10 @@ export async function updateUser(
                 id: true,
                 email: true,
                 username: true,
-                newuser: true,
-                googleid: true,
+                newUser: true,
+                providerId: true,
                 provider: true,
-                createdat: true,
+                createdAt: true,
                 profile: {
                     select: {
                         id: true,
@@ -99,7 +99,7 @@ export async function createUser(data: {
     email: string;
     username?: string | null;
     hashedpassword?: string | null;
-    googleid?: string | null;
+    providerId?: string | null;
     provider?: string | null;
     newuser?: boolean | null;
 }): Promise<User> {
@@ -108,19 +108,19 @@ export async function createUser(data: {
             data: {
                 email: data.email,
                 username: data.username,
-                newuser: data.newuser ?? true,
-                hashedpassword: data.hashedpassword,
-                googleid: data.googleid,
+                newUser: data.newuser ?? true,
+                hashedPassword: data.hashedpassword,
+                providerId: data.providerId,
                 provider: data.provider,
             },
             select: {
                 id: true,
                 email: true,
                 username: true,
-                newuser: true,
-                googleid: true,
+                newUser: true,
+                providerId: true,
                 provider: true,
-                createdat: true,
+                createdAt: true,
                 profile: {
                     select: {
                         id: true,

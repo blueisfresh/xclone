@@ -2,14 +2,26 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { User } from "@/lib/types";
 import { createUserAction, updateUserAction } from "@/lib/form-actions/users";
+import {useState} from "react";
 
 interface UserFormProps {
     user?: User;
 }
 
 export default function UserForm({ user }: UserFormProps) {
-    const isEdit = !user;
+    const isEdit = !!user;
     const action = isEdit ? updateUserAction : createUserAction;
+
+    // normalize to "google" | "apple" | ""
+    const [provider, setProvider] = useState<string>(user?.provider ?? "google");
+
+    // derive initial Provider ID value from existing user
+    const initialProviderId =
+        provider === "apple" ? (user as any)?.appleid ?? "" : user?.providerId ?? "";
+
+    const [providerId, setProviderId] = useState<string>(initialProviderId);
+
+    const providerIdLabel = provider === "apple" ? "Apple ID" : "Google ID";
 
     return (
         <div className="max-w-md mx-auto mt-8">
@@ -55,25 +67,6 @@ export default function UserForm({ user }: UserFormProps) {
                     />
                 </div>
 
-                {/* GOOGLE ID */}
-
-                <div>
-                    <label
-                        htmlFor="googleid"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                        Google ID
-                    </label>
-                    <input
-                        type="text"
-                        id="googleid"
-                        name="googleid"
-                        defaultValue={user?.googleid || ""}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-
                 {/* PROVIDER */}
                 <div>
                     <label
@@ -85,14 +78,39 @@ export default function UserForm({ user }: UserFormProps) {
                     <select
                         id="provider"
                         name="provider"
-                        defaultValue={user?.provider || ""}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2
-                       bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={provider}
+                        onChange={(e) => {
+                            const next = e.target.value;
+                            setProvider(next);
+                            // reset providerId when switching provider
+                            setProviderId("");
+                        }}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="true">Google</option>
-                        <option value="false">Apple</option>
+                        <option value="google">Google</option>
+                        <option value="apple">Apple</option>
                     </select>
+                </div>
 
+                {/* PROVIDER ID (dynamic label/value) */}
+                <div>
+                    <label
+                        htmlFor="providerId"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                        {providerIdLabel}
+                    </label>
+                    <input
+                        type="text"
+                        id="providerId"
+                        name="providerId"
+                        value={providerId}
+                        onChange={(e) => setProviderId(e.target.value)}
+                        placeholder={
+                            provider === "apple" ? "Enter Apple ID" : "Enter Google ID"
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                 </div>
 
                 {/* IS NEW USER? */}

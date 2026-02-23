@@ -7,7 +7,7 @@ export interface UserSummary {
 export interface PostSummary {
     id: number;
     content: string;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
 }
 
 export interface User {
@@ -15,9 +15,9 @@ export interface User {
     email: string;
     username?: string | null;
     newuser?: boolean | null;
-    googleid?: string | null;
+    providerId?: string | null;
     provider?: string | null;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
     profile?: Profile | null;
     _count?: {
         posts: number;
@@ -39,7 +39,7 @@ export interface Profile {
 export interface Post {
     id: number;
     content: string;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
     user?: UserSummary | null;
     parent?: PostSummary | null;
     _count?: {
@@ -53,20 +53,20 @@ export interface Session {
     id: number;
     refreshtoken: string;
     expirationtime: string | Date;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
     user?: UserSummary | null;
 }
 
 export interface Like {
     id: number;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
     post: PostSummary;
     user: UserSummary;
 }
 
 export interface Repost {
     id: number;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
     post: PostSummary;
     user: UserSummary;
 }
@@ -81,7 +81,7 @@ export interface Chat {
 export interface Message {
     id: number;
     content: string;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
     read?: boolean | null;
     user: UserSummary;
     chatId?: number | null;
@@ -93,14 +93,14 @@ export interface Notification {
     objecttype: string;
     objecturi: number;
     read?: boolean | null;
-    createdat?: string | Date | null;
+    createdAt?: string | Date | null;
     sender: UserSummary;
     recipient: UserSummary;
 }
 
 export interface UserFollows {
-    userid: number;
-    followerid: number;
+    userId: number;
+    followerId: number;
     user?: UserSummary;
     follower?: UserSummary;
 }

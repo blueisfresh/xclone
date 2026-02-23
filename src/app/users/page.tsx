@@ -17,8 +17,8 @@ export default async function UserPage() {
                 </Link>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-300">
+            <div className="overflow-x-auto border border-gray-300 rounded-md">
+                <table className="min-w-full border-collapse bg-white">
                     <thead>
                     <tr className="bg-gray-100">
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -39,6 +39,9 @@ export default async function UserPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             Created At
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Actions
+                        </th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -52,16 +55,16 @@ export default async function UserPage() {
                         users.map((item: User) => (
                             <tr key={item.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">{item.username}</td>
-                                <td className="px-6 py-4">{item.username || "-"}</td>
+                                <td className="px-6 py-4">{item.email || "-"}</td>
                                 <td className="px-6 py-4">{item.newuser ? "yes" : "no"}</td>
                                 <td className="px-6 py-4">
-                                    {item.googleid || "-"}
+                                    {item.providerId || "-"}
                                 </td>
                                 <td className="px-6 py-4">
                                     {item.provider || "-"}
                                 </td>
                                 <td className="px-6 py-4">
-                                    {item.createdat?.toString() || "-"}
+                                    {item.createdAt?.toString() || "-"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <Link

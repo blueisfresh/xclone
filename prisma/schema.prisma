@@ -1,6 +1,5 @@
 generator client {
-  provider   = "prisma-client"
-  output     = "./generated"
+  provider   = "prisma-client-js"
   engineType = "client"
 }
 
@@ -12,13 +11,12 @@ model User {
   id             Int       @id @default(autoincrement())
   email          String
   username       String?
-  newuser        Boolean?
-  hashedpassword String?
-  googleid       String?
+  newUser        Boolean?
+  hashedPassword String?
+  providerId     String?
   provider       String?
-  createdat      DateTime? @db.Timestamptz
+  createdAt      DateTime? @db.Timestamptz
 
-  // Relations
   profile               Profile?
   sessions              Session[]
   posts                 Post[]
@@ -49,9 +47,9 @@ model Profile {
 
 model Session {
   id             Int       @id @default(autoincrement())
-  refreshtoken   String
-  expirationtime DateTime  @db.Timestamptz
-  createdat      DateTime? @db.Timestamptz
+  refreshToken   String
+  expirationTime DateTime  @db.Timestamptz
+  createdAt      DateTime? @db.Timestamptz
 
   userId Int?
   user   User? @relation(fields: [userId], references: [id])
@@ -60,13 +58,14 @@ model Session {
 model Post {
   id        Int       @id @default(autoincrement())
   content   String
-  createdat DateTime? @db.Timestamptz
+  createdAt DateTime? @db.Timestamptz
 
   userId Int?
   user   User? @relation(fields: [userId], references: [id])
 
-  parentpostid Int?
-  parent       Post?  @relation("PostReplies", fields: [parentpostid], references: [id])
+  // DB: parentPostId (CamelCase)
+  parentPostId Int?
+  parent       Post?  @relation("PostReplies", fields: [parentPostId], references: [id])
   replies      Post[] @relation("PostReplies")
 
   likes   Like[]
@@ -75,7 +74,7 @@ model Post {
 
 model Like {
   id        Int       @id @default(autoincrement())
-  createdat DateTime? @db.Timestamptz
+  createdAt DateTime? @db.Timestamptz
 
   postId Int
   post   Post @relation(fields: [postId], references: [id])
@@ -88,7 +87,7 @@ model Like {
 
 model Repost {
   id        Int       @id @default(autoincrement())
-  createdat DateTime? @db.Timestamptz
+  createdAt DateTime? @db.Timestamptz
 
   postId Int
   post   Post @relation(fields: [postId], references: [id])
@@ -100,13 +99,13 @@ model Repost {
 }
 
 model UserFollows {
-  userid     Int
-  followerid Int
+  userId     Int
+  followerId Int
 
-  user     User @relation("UserFollowers", fields: [userid], references: [id])
-  follower User @relation("UserFollowing", fields: [followerid], references: [id])
+  user     User @relation("UserFollowers", fields: [userId], references: [id])
+  follower User @relation("UserFollowing", fields: [followerId], references: [id])
 
-  @@id([userid, followerid])
+  @@id([userId, followerId])
 }
 
 model Chat {
@@ -124,7 +123,7 @@ model Chat {
 model Message {
   id        Int       @id @default(autoincrement())
   content   String
-  createdat DateTime? @db.Timestamptz
+  createdAt DateTime? @db.Timestamptz
   read      Boolean?
 
   userId Int
@@ -137,14 +136,14 @@ model Message {
 model Notification {
   id         Int       @id @default(autoincrement())
   type       String
-  objecttype String
-  objecturi  Int
+  objectType String
+  objectUri  Int
   read       Boolean?
-  createdat  DateTime? @db.Timestamptz
+  createdAt  DateTime? @db.Timestamptz
 
-  senderid Int
-  sender   User @relation("NotificationSender", fields: [senderid], references: [id])
+  senderId Int
+  sender   User @relation("NotificationSender", fields: [senderId], references: [id])
 
-  recipientid Int
-  recipient   User @relation("NotificationRecipient", fields: [recipientid], references: [id])
+  recipientId Int
+  recipient   User @relation("NotificationRecipient", fields: [recipientId], references: [id])
 }
