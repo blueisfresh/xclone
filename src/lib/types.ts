@@ -14,7 +14,7 @@ export interface User {
     id: number;
     email: string;
     username?: string | null;
-    newuser?: boolean | null;
+    newUser?: boolean | null;
     providerId?: string | null;
     provider?: string | null;
     createdAt?: string | Date | null;

@@ -56,7 +56,7 @@ export default async function UserPage() {
                             <tr key={item.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">{item.username}</td>
                                 <td className="px-6 py-4">{item.email || "-"}</td>
-                                <td className="px-6 py-4">{item.newuser ? "yes" : "no"}</td>
+                                <td className="px-6 py-4">{item.newUser ? "yes" : "no"}</td>
                                 <td className="px-6 py-4">
                                     {item.providerId || "-"}
                                 </td>
