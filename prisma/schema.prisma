@@ -8,14 +8,14 @@ datasource db {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   email          String
   username       String?
   newUser        Boolean?
   hashedPassword String?
   providerId     String?
   provider       String?
-  createdAt      DateTime? @db.Timestamptz
+  createdAt      DateTime @default(now()) @db.Timestamptz
 
   profile               Profile?
   sessions              Session[]
@@ -46,19 +46,19 @@ model Profile {
 }
 
 model Session {
-  id             Int       @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   refreshToken   String
-  expirationTime DateTime  @db.Timestamptz
-  createdAt      DateTime? @db.Timestamptz
+  expirationTime DateTime @db.Timestamptz
+  createdAt      DateTime @default(now()) @db.Timestamptz
 
   userId Int?
   user   User? @relation(fields: [userId], references: [id])
 }
 
 model Post {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   content   String
-  createdAt DateTime? @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   userId Int?
   user   User? @relation(fields: [userId], references: [id])
@@ -73,8 +73,8 @@ model Post {
 }
 
 model Like {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime? @db.Timestamptz
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   postId Int
   post   Post @relation(fields: [postId], references: [id])
@@ -86,8 +86,8 @@ model Like {
 }
 
 model Repost {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime? @db.Timestamptz
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @db.Timestamptz
 
   postId Int
   post   Post @relation(fields: [postId], references: [id])
@@ -121,9 +121,9 @@ model Chat {
 }
 
 model Message {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   content   String
-  createdAt DateTime? @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
   read      Boolean?
 
   userId Int
@@ -134,12 +134,12 @@ model Message {
 }
 
 model Notification {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   type       String
   objectType String
   objectUri  Int
   read       Boolean?
-  createdAt  DateTime? @db.Timestamptz
+  createdAt  DateTime @default(now()) @db.Timestamptz
 
   senderId Int
   sender   User @relation("NotificationSender", fields: [senderId], references: [id])
