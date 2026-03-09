@@ -1,27 +1,28 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { User } from "@/lib/types";
-import { createUserAction, updateUserAction } from "@/lib/form-actions/users";
-import {useState} from "react";
+import { useState } from "react";
+import { createUserWithHash } from "@/lib/form-actions/create-user";
+import { updateUserAction } from "@/lib/form-actions/users";
 
 interface UserFormProps {
-    user?: User;
+    user?: User | null;
 }
 
 export default function UserForm({ user }: UserFormProps) {
-    const isEdit = !!user;
-    const action = isEdit ? updateUserAction : createUserAction;
-
-    // normalize to "google" | "apple" | ""
+    const isEdit = !!user?.id;
     const [provider, setProvider] = useState<string>(user?.provider ?? "google");
 
-    // derive initial Provider ID value from existing user
     const initialProviderId =
         provider === "apple" ? (user as any)?.appleid ?? "" : user?.providerId ?? "";
-
     const [providerId, setProviderId] = useState<string>(initialProviderId);
 
     const providerIdLabel = provider === "apple" ? "Apple ID" : "Google ID";
+
+    // Choose the proper server action
+    const action = isEdit ? updateUserAction : createUserWithHash;
 
     return (
         <div className="max-w-md mx-auto mt-8">
@@ -30,49 +31,60 @@ export default function UserForm({ user }: UserFormProps) {
             </h1>
 
             <form action={action} className="space-y-4">
+                {/* include id for edit */}
+                {isEdit && (
+                    <input type="hidden" name="id" value={String(user!.id)} />
+                )}
+
                 {/* USERNAME */}
                 <div>
-                    <label
-                        htmlFor="username"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="username" className="block text-sm font-medium mb-1">
                         Username
                     </label>
                     <input
                         type="text"
                         id="username"
                         name="username"
-                        defaultValue={user?.username || ""}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        defaultValue={user?.username ?? ""}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                     />
                 </div>
 
                 {/* EMAIL */}
                 <div>
-                    <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="email" className="block text-sm font-medium mb-1">
                         Email
                     </label>
                     <input
                         type="email"
                         id="email"
                         name="email"
-                        defaultValue={user?.email || ""}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        defaultValue={user?.email ?? ""}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
                     />
                 </div>
 
+                {/* PASSWORD (only shown on create, but harmless on edit) */}
+                {!isEdit && (
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium mb-1">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        />
+                    </div>
+                )}
+
                 {/* PROVIDER */}
                 <div>
-                    <label
-                        htmlFor="provider"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="provider" className="block text-sm font-medium mb-1">
                         Provider
                     </label>
                     <select
@@ -82,22 +94,19 @@ export default function UserForm({ user }: UserFormProps) {
                         onChange={(e) => {
                             const next = e.target.value;
                             setProvider(next);
-                            // reset providerId when switching provider
                             setProviderId("");
                         }}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
+                        <option value="apple">No Provider</option>
                         <option value="google">Google</option>
                         <option value="apple">Apple</option>
                     </select>
                 </div>
 
-                {/* PROVIDER ID (dynamic label/value) */}
+                {/* PROVIDER ID */}
                 <div>
-                    <label
-                        htmlFor="providerId"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="providerId" className="block text-sm font-medium mb-1">
                         {providerIdLabel}
                     </label>
                     <input
@@ -106,34 +115,27 @@ export default function UserForm({ user }: UserFormProps) {
                         name="providerId"
                         value={providerId}
                         onChange={(e) => setProviderId(e.target.value)}
-                        placeholder={
-                            provider === "apple" ? "Enter Apple ID" : "Enter Google ID"
-                        }
+                        placeholder={provider === "apple" ? "Enter Apple ID" : "Enter Google ID"}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
 
                 {/* IS NEW USER? */}
                 <div>
-                    <label
-                        htmlFor="newuser"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                    <label htmlFor="newUser" className="block text-sm font-medium mb-1">
                         Is New User?
                     </label>
                     <select
-                        id="newuser"
-                        name="newuser"
-                        defaultValue={user?.newuser ? "true" : "false"}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2
-                       bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="newUser"
+                        name="newUser"
+                        defaultValue={user?.newUser ? "true" : "false"}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </select>
                 </div>
 
-                {/* BUTTONS */}
                 <div className="flex gap-2 pt-4">
                     <Button type="submit" variant="default">
                         Save

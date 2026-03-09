@@ -1,9 +1,10 @@
-import {getUsers} from "@/lib/actions/users";
 import UserForm from "@/components/forms/user-form";
 
-
-export default async function CreateInventoryPage() {
-    const users= await getUsers();
-
-    return <UserForm user={users} />;
+export default function CreateUserPage() {
+    return (
+        <div className="container mx-auto py-8">
+            <h1 className="text-3xl font-bold mb-6">Create User</h1>
+            <UserForm />
+        </div>
+    );
 }
