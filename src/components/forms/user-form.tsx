@@ -13,7 +13,8 @@ interface UserFormProps {
 
 export default function UserForm({ user }: UserFormProps) {
     const isEdit = !!user?.id;
-    const [provider, setProvider] = useState<string>(user?.provider ?? "google");
+    // Changed initial provider to "none" if null
+    const [provider, setProvider] = useState<string>(user?.provider ?? "none");
 
     const initialProviderId =
         provider === "apple" ? (user as any)?.appleid ?? "" : user?.providerId ?? "";
@@ -94,31 +95,33 @@ export default function UserForm({ user }: UserFormProps) {
                         onChange={(e) => {
                             const next = e.target.value;
                             setProvider(next);
-                            setProviderId("");
+                            if (next === "none") setProviderId("");
                         }}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="apple">No Provider</option>
+                        <option value="none">No Provider</option>
                         <option value="google">Google</option>
                         <option value="apple">Apple</option>
                     </select>
                 </div>
 
-                {/* PROVIDER ID */}
-                <div>
-                    <label htmlFor="providerId" className="block text-sm font-medium mb-1">
-                        {providerIdLabel}
-                    </label>
-                    <input
-                        type="text"
-                        id="providerId"
-                        name="providerId"
-                        value={providerId}
-                        onChange={(e) => setProviderId(e.target.value)}
-                        placeholder={provider === "apple" ? "Enter Apple ID" : "Enter Google ID"}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
+                {/* CONDITIONAL PROVIDER ID */}
+                {provider !== "none" && (
+                    <div>
+                        <label htmlFor="providerId" className="block text-sm font-medium mb-1">
+                            {providerIdLabel}
+                        </label>
+                        <input
+                            type="text"
+                            id="providerId"
+                            name="providerId"
+                            value={providerId}
+                            onChange={(e) => setProviderId(e.target.value)}
+                            placeholder={provider === "apple" ? "Enter Apple ID" : "Enter Google ID"}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                )}
 
                 {/* IS NEW USER? */}
                 <div>
