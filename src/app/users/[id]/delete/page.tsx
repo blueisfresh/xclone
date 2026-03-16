@@ -24,25 +24,30 @@ export default async function DeleteUserPage({
     }
 
     return (
-        <div className="max-w-md mx-auto mt-8">
-            <h1 className="text-2xl font-bold mb-4">Delete User</h1>
+        <div className="min-h-screen bg-muted flex items-start justify-center p-8">
+            <div className="w-full max-w-md bg-background rounded-2xl border border-border shadow-sm p-8 flex flex-col gap-6">
 
-            <p className="mb-6 text-gray-600">
-                Are you sure you want to delete{" "}
-                <strong>{user.username ?? user.email}</strong>? This action
-                cannot be undone.
-            </p>
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight">
+                        Delete User
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        This action cannot be undone.
+                    </p>
+                </div>
 
-            <form action={handleDelete} className="flex gap-2">
-                <Button type="submit" variant="destructive">
-                    Delete
-                </Button>
-                <Link href="/users">
-                    <Button type="button" variant="outline">
-                        Cancel
-                    </Button>
-                </Link>
-            </form>
+                <p className="text-sm text-foreground">
+                    Are you sure you want to delete{" "}
+                    <span className="font-semibold">{user.username ?? user.email}</span>?
+                </p>
+
+                <form action={handleDelete} className="flex gap-2">
+                    <Button type="submit" variant="destructive">Delete</Button>
+                    <Link href="/users">
+                        <Button type="button" variant="outline">Cancel</Button>
+                    </Link>
+                </form>
+            </div>
         </div>
     );
 }

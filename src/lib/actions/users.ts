@@ -144,3 +144,75 @@ export async function deleteUser(id: number): Promise<void> {
         throw new Error("Failed to delete user.");
     }
 }
+
+// ── Modal actions (no redirect — return null on success, string on error) ──
+
+export async function createUserModalAction(
+    _prev: string | null | undefined,
+    formData: FormData
+): Promise<string | null> {
+    const email = formData.get("email") as string;
+    const username = (formData.get("username") as string) || null;
+    const password = formData.get("password") as string;
+    const provider = (formData.get("provider") as string) || null;
+    const providerId = (formData.get("providerId") as string) || null;
+    const newUser = formData.get("newUser") === "true";
+
+    if (!email || !password) return "Email and password are required";
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 12);
+        await prisma.user.create({
+            data: { email, username, provider, providerId, newUser, hashedPassword },
+        });
+        return null;
+    } catch {
+        return "Failed to create user. Email may already be in use.";
+    }
+}
+
+export async function updateUserModalAction(
+    _prev: string | null | undefined,
+    formData: FormData
+): Promise<string | null> {
+    const id = Number(formData.get("id"));
+    if (!id) return "Missing user id";
+
+    const email = (formData.get("email") as string) || null;
+    const username = (formData.get("username") as string) || null;
+    const provider = (formData.get("provider") as string) || null;
+    const providerId = (formData.get("providerId") as string) || null;
+    const newUser = formData.get("newUser") === "true";
+    const password = (formData.get("password") as string) || "";
+    const noProvider = !provider || provider === "none";
+
+    try {
+        const data: Prisma.UserUpdateInput = {
+            email: email ?? undefined,
+            username,
+            newUser,
+            provider: noProvider ? null : provider,
+            providerId: noProvider ? null : providerId,
+            ...(password.trim() && { hashedPassword: await bcrypt.hash(password, 12) }),
+        };
+        await prisma.user.update({ where: { id }, data });
+        return null;
+    } catch {
+        return "Failed to update user.";
+    }
+}
+
+export async function deleteUserModalAction(
+    _prev: string | null | undefined,
+    formData: FormData
+): Promise<string | null> {
+    const id = Number(formData.get("id"));
+    if (!id) return "Missing user id";
+
+    try {
+        await prisma.user.delete({ where: { id } });
+        return null;
+    } catch {
+        return "Failed to delete user.";
+    }
+}
