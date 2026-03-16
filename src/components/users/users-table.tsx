@@ -271,13 +271,27 @@ function DeleteModal({ user, onClose }: { user: UserWithProfile; onClose: () => 
 
 type Mode = "create" | "edit" | "delete"
 
-export default function UsersTable({ users }: { users: UserWithProfile[] }) {
+interface UsersTableProps {
+    users: UserWithProfile[]
+    total: number
+    page: number
+    pageSize: number
+}
+
+export default function UsersTable({ users, total, page, pageSize }: UsersTableProps) {
+    const router = useRouter()
     const [mode, setMode] = useState<Mode | null>(null)
     const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null)
+
+    const totalPages = Math.ceil(total / pageSize)
+    const start = total === 0 ? 0 : (page - 1) * pageSize + 1
+    const end = Math.min(page * pageSize, total)
 
     const openEdit = (user: UserWithProfile) => { setSelectedUser(user); setMode("edit") }
     const openDelete = (user: UserWithProfile) => { setSelectedUser(user); setMode("delete") }
     const close = () => { setMode(null); setSelectedUser(null) }
+
+    const goToPage = (p: number) => router.push(`?page=${p}`)
 
     return (
         <>
@@ -287,66 +301,98 @@ export default function UsersTable({ users }: { users: UserWithProfile[] }) {
                     <Button onClick={() => setMode("create")}>Add user</Button>
                 </div>
 
-                <div className="overflow-x-auto border border-border rounded-xl">
-                    <table className="min-w-full border-collapse bg-background">
-                        <thead>
-                            <tr className="bg-muted">
-                                {["Username", "Email", "New User", "Provider ID", "Provider", "Created At", "Actions"].map((h) => (
-                                    <th key={h} className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                        {h}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="bg-background divide-y divide-border">
-                            {users.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-muted-foreground">
-                                        No users yet.
-                                    </td>
+                <div className="border border-border rounded-xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full border-collapse bg-background">
+                            <thead>
+                                <tr className="bg-muted">
+                                    {["Username", "Email", "New User", "Provider ID", "Provider", "Created At", "Actions"].map((h) => (
+                                        <th key={h} className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                            {h}
+                                        </th>
+                                    ))}
                                 </tr>
-                            ) : (
-                                users.map((item) => (
-                                    <tr key={item.id} className="hover:bg-muted/50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                            {item.username ?? "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-foreground">
-                                            {item.email || "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-foreground">
-                                            {item.newUser ? "Yes" : "No"}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-muted-foreground">
-                                            {item.providerId || "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-muted-foreground">
-                                            {item.provider || "-"}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
-                                            {item.createdAt
-                                                ? new Intl.DateTimeFormat("en-GB", {
-                                                      day: "2-digit",
-                                                      month: "short",
-                                                      year: "numeric",
-                                                      hour: "2-digit",
-                                                      minute: "2-digit",
-                                                  }).format(new Date(item.createdAt))
-                                                : "-"}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                            <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
-                                                Edit
-                                            </Button>
-                                            <Button size="sm" variant="destructive" onClick={() => openDelete(item)}>
-                                                Delete
-                                            </Button>
+                            </thead>
+                            <tbody className="bg-background divide-y divide-border">
+                                {users.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-6 py-8 text-center text-sm text-muted-foreground">
+                                            No users yet.
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    users.map((item) => (
+                                        <tr key={item.id} className="hover:bg-muted/50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                {item.username ?? "-"}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-foreground">
+                                                {item.email || "-"}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-foreground">
+                                                {item.newUser ? "Yes" : "No"}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                                                {item.providerId || "-"}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                                                {item.provider || "-"}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                                                {item.createdAt
+                                                    ? new Intl.DateTimeFormat("en-GB", {
+                                                          day: "2-digit",
+                                                          month: "short",
+                                                          year: "numeric",
+                                                          hour: "2-digit",
+                                                          minute: "2-digit",
+                                                      }).format(new Date(item.createdAt))
+                                                    : "-"}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                                <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
+                                                    Edit
+                                                </Button>
+                                                <Button size="sm" variant="destructive" onClick={() => openDelete(item)}>
+                                                    Delete
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-background">
+                        <p className="text-sm text-muted-foreground">
+                            {total === 0
+                                ? "No results"
+                                : `Showing ${start}–${end} of ${total} users`}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => goToPage(page - 1)}
+                                disabled={page <= 1}
+                            >
+                                Previous
+                            </Button>
+                            <span className="text-sm text-muted-foreground px-1">
+                                Page {page} of {totalPages || 1}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => goToPage(page + 1)}
+                                disabled={page >= totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

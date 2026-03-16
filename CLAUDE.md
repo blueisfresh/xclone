@@ -89,6 +89,33 @@ import { Button } from "@/components/ui/button"
 <a className="font-medium text-foreground underline underline-offset-4 hover:opacity-70">
 ```
 
+### Pagination
+
+Every query that returns a list **must** be paginated. Never fetch unbounded lists.
+
+- **Page size:** 10 items per page for all data tables
+- **Mechanism:** URL search param `?page=N` — server component reads it, passes page + total to the client table component
+- **DB query:** always include `skip`, `take`, and `orderBy` (consistent ordering is required for pagination to be correct). Fetch count and data in parallel with `Promise.all`:
+
+```ts
+export const THING_PAGE_SIZE = 10
+
+export async function getThings(page = 1, pageSize = THING_PAGE_SIZE) {
+    const skip = (page - 1) * pageSize
+    const [items, total] = await Promise.all([
+        prisma.thing.findMany({ orderBy: { createdAt: "desc" }, skip, take: pageSize }),
+        prisma.thing.count(),
+    ])
+    return { items, total }
+}
+```
+
+- **Page component:** read and clamp `searchParams.page`, pass `page`, `total`, `pageSize` as props
+- **Table component:** show `"Showing X–Y of Z items"` and Prev / Next buttons; navigate with `router.push("?page=N")`
+- The `PAGE_SIZE` constant lives in the actions file and is exported so the page component stays in sync
+
+---
+
 ### Modals / Dialogs
 For any create, edit, delete, or other short-form action — always use a Dialog (modal), never navigate to a separate page.
 

@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { CreateUserSchema, UpdateUserSchema, DeleteUserSchema } from "@/lib/validations/users";
+import { USERS_PAGE_SIZE } from "@/lib/constants";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -98,9 +99,22 @@ export async function updateUserAction(formData: FormData) {
 
 // ── Read ───────────────────────────────────────────────────────────────────
 
-export async function getUsers(): Promise<UserWithProfile[]> {
+export async function getUsers(
+    page = 1,
+    pageSize = USERS_PAGE_SIZE
+): Promise<{ users: UserWithProfile[]; total: number }> {
     try {
-        return await prisma.user.findMany({ select: userWithProfileSelect });
+        const skip = (page - 1) * pageSize
+        const [users, total] = await Promise.all([
+            prisma.user.findMany({
+                select: userWithProfileSelect,
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: pageSize,
+            }),
+            prisma.user.count(),
+        ])
+        return { users, total }
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch users.");
