@@ -5,49 +5,42 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 
-// Prisma-derived types — single source of truth, never drift from the schema
+// Select consts — change a field here and it updates everywhere
+const userBaseSelect = {
+    id: true,
+    email: true,
+    username: true,
+    newUser: true,
+    providerId: true,
+    provider: true,
+    createdAt: true,
+} satisfies Prisma.UserSelect;
 
-export type UserBase = Prisma.UserGetPayload<{
-    select: {
-        id: true;
-        email: true;
-        username: true;
-        newUser: true;
-        providerId: true;
-        provider: true;
-        createdAt: true;
-    };
-}>;
+const userWithProfileSelect = {
+    ...userBaseSelect,
+    profile: {
+        select: {
+            id: true,
+            name: true,
+            bio: true,
+            img: true,
+            website: true,
+            dob: true,
+            userId: true,
+        },
+    },
+    _count: {
+        select: {
+            posts: true,
+            following: true,
+            followers: true,
+        },
+    },
+} satisfies Prisma.UserSelect;
 
-export type UserWithProfile = Prisma.UserGetPayload<{
-    select: {
-        id: true;
-        email: true;
-        username: true;
-        newUser: true;
-        providerId: true;
-        provider: true;
-        createdAt: true;
-        profile: {
-            select: {
-                id: true;
-                name: true;
-                bio: true;
-                img: true;
-                website: true;
-                dob: true;
-                userId: true;
-            };
-        };
-        _count: {
-            select: {
-                posts: true;
-                following: true;
-                followers: true;
-            };
-        };
-    };
-}>;
+// Types derived from the selects — never drift from the schema
+export type UserBase = Prisma.UserGetPayload<{ select: typeof userBaseSelect }>;
+export type UserWithProfile = Prisma.UserGetPayload<{ select: typeof userWithProfileSelect }>;
 
 export async function createUserWithHash(formData: FormData) {
     const email = formData.get("email") as string;
@@ -103,37 +96,7 @@ export async function updateUserAction(formData: FormData) {
 
 export async function getUsers(): Promise<UserWithProfile[]> {
     try {
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                email: true,
-                username: true,
-                newUser: true,
-                providerId: true,
-                provider: true,
-                createdAt: true,
-                // Include the profile relation
-                profile: {
-                    select: {
-                        id: true,
-                        name: true,
-                        bio: true,
-                        img: true,
-                        website: true,
-                        dob: true,
-                        userId: true,
-                    }
-                },
-                // Optional: Include counts for stats
-                _count: {
-                    select: {
-                        posts: true,
-                        following: true,
-                        followers: true,
-                    }
-                }
-            }
-        });
+        const users = await prisma.user.findMany({ select: userWithProfileSelect });
 
         return users;
     } catch (error) {
@@ -150,15 +113,7 @@ export async function updateUser(
         const updatedUser = await prisma.user.update({
             where: { id },
             data,
-            select: {
-                id: true,
-                email: true,
-                username: true,
-                newUser: true,
-                providerId: true,
-                provider: true,
-                createdAt: true,
-            },
+            select: userBaseSelect,
         });
 
         return updatedUser;
@@ -172,15 +127,7 @@ export async function getUserById(id: number): Promise<UserBase | null> {
     try {
         const user = await prisma.user.findUnique({
             where: { id },
-            select: {
-                id: true,
-                email: true,
-                username: true,
-                newUser: true,
-                providerId: true,
-                provider: true,
-                createdAt: true,
-            },
+            select: userBaseSelect,
         });
         return user;
     } catch (error) {
