@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client"
 import bcrypt from "bcrypt"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { LoginSchema } from "@/lib/validations/auth"
 
 const SESSION_COOKIE = "session_token"
 const SESSION_DURATION_DAYS = 30
@@ -25,10 +26,10 @@ export async function loginAction(
     _prevState: string | null,
     formData: FormData
 ): Promise<string | null> {
-    const identifier = formData.get("identifier") as string
-    const password = formData.get("password") as string
+    const result = LoginSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) return result.error.issues[0]?.message ?? "Validation failed"
 
-    if (!identifier || !password) return "Email/username and password are required"
+    const { identifier, password } = result.data
 
     const user = await prisma.user.findFirst({
         where: {

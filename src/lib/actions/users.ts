@@ -4,8 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
+import { CreateUserSchema, UpdateUserSchema, DeleteUserSchema } from "@/lib/validations/users";
 
-// Select consts — change a field here and it updates everywhere
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function firstError(error: { issues: { message: string }[] }): string {
+    return error.issues[0]?.message ?? "Validation failed"
+}
+
+// ── Select consts — change a field here and it updates everywhere ──────────
+
 const userBaseSelect = {
     id: true,
     email: true,
@@ -38,27 +46,25 @@ const userWithProfileSelect = {
     },
 } satisfies Prisma.UserSelect;
 
-// Types derived from the selects — never drift from the schema
+// ── Types derived from the selects ─────────────────────────────────────────
+
 export type UserBase = Prisma.UserGetPayload<{ select: typeof userBaseSelect }>;
 export type UserWithProfile = Prisma.UserGetPayload<{ select: typeof userWithProfileSelect }>;
 
+// ── Page-level actions (redirect on success) ───────────────────────────────
+
 export async function createUserWithHash(formData: FormData) {
-    const email = formData.get("email") as string;
-    const username = (formData.get("username") as string) || null;
-    const password = formData.get("password") as string;
-    const provider = (formData.get("provider") as string) || null;
-    const providerId = (formData.get("providerId") as string) || null;
-    const newUser = formData.get("newUser") === "true";
+    const result = CreateUserSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) throw new Error(firstError(result.error))
 
-    if (!email || !password) throw new Error("Email and password are required");
-
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const { email, username, password, provider, providerId, newUser } = result.data
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     await prisma.user.create({
         data: {
             email,
             username,
-            provider,
+            provider: provider === "none" ? null : provider,
             providerId,
             newUser,
             hashedPassword,
@@ -69,36 +75,32 @@ export async function createUserWithHash(formData: FormData) {
 }
 
 export async function updateUserAction(formData: FormData) {
-    const id = Number(formData.get("id"));
-    if (!id) throw new Error("Missing user id");
+    const result = UpdateUserSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) throw new Error(firstError(result.error))
 
-    const email = (formData.get("email") as string) || null;
-    const username = (formData.get("username") as string) || null;
-    const provider = (formData.get("provider") as string) || null;
-    const providerId = (formData.get("providerId") as string) || null;
-    const newUser = formData.get("newUser") === "true";
-    const password = (formData.get("password") as string) || "";
+    const { id, email, username, provider, providerId, newUser, password } = result.data
+    const noProvider = provider === "none"
 
-    const noProvider = !provider || provider === "none";
+    await prisma.user.update({
+        where: { id },
+        data: {
+            email: email ?? undefined,
+            username,
+            newUser,
+            provider: noProvider ? null : provider,
+            providerId: noProvider ? null : providerId,
+            ...(password && { hashedPassword: await bcrypt.hash(password, 12) }),
+        },
+    });
 
-    const data: Prisma.UserUpdateInput = {
-        email: email ?? undefined,
-        username,
-        newUser,
-        provider: noProvider ? null : provider,
-        providerId: noProvider ? null : providerId,
-        ...(password.trim() && { hashedPassword: await bcrypt.hash(password, 12) }),
-    };
-
-    await prisma.user.update({ where: { id }, data });
     redirect("/users");
 }
 
+// ── Read ───────────────────────────────────────────────────────────────────
+
 export async function getUsers(): Promise<UserWithProfile[]> {
     try {
-        const users = await prisma.user.findMany({ select: userWithProfileSelect });
-
-        return users;
+        return await prisma.user.findMany({ select: userWithProfileSelect });
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch users.");
@@ -110,13 +112,7 @@ export async function updateUser(
     data: Prisma.UserUpdateInput
 ): Promise<UserBase> {
     try {
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data,
-            select: userBaseSelect,
-        });
-
-        return updatedUser;
+        return await prisma.user.update({ where: { id }, data, select: userBaseSelect });
     } catch (error) {
         console.error("Error updating user:", error);
         throw new Error("Failed to update user.");
@@ -125,11 +121,7 @@ export async function updateUser(
 
 export async function getUserById(id: number): Promise<UserBase | null> {
     try {
-        const user = await prisma.user.findUnique({
-            where: { id },
-            select: userBaseSelect,
-        });
-        return user;
+        return await prisma.user.findUnique({ where: { id }, select: userBaseSelect });
     } catch (error) {
         console.error("Error fetching user:", error);
         throw new Error("Failed to fetch user.");
@@ -145,29 +137,32 @@ export async function deleteUser(id: number): Promise<void> {
     }
 }
 
-// ── Modal actions (no redirect — return null on success, string on error) ──
+// ── Modal actions (return null on success, string on error) ───────────────
 
 export async function createUserModalAction(
     _prev: string | null | undefined,
     formData: FormData
 ): Promise<string | null> {
-    const email = formData.get("email") as string;
-    const username = (formData.get("username") as string) || null;
-    const password = formData.get("password") as string;
-    const provider = (formData.get("provider") as string) || null;
-    const providerId = (formData.get("providerId") as string) || null;
-    const newUser = formData.get("newUser") === "true";
+    const result = CreateUserSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) return firstError(result.error)
 
-    if (!email || !password) return "Email and password are required";
+    const { email, username, password, provider, providerId, newUser } = result.data
 
     try {
-        const hashedPassword = await bcrypt.hash(password, 12);
+        const hashedPassword = await bcrypt.hash(password, 12)
         await prisma.user.create({
-            data: { email, username, provider, providerId, newUser, hashedPassword },
+            data: {
+                email,
+                username,
+                provider: provider === "none" ? null : provider,
+                providerId,
+                newUser,
+                hashedPassword,
+            },
         });
-        return null;
+        return null
     } catch {
-        return "Failed to create user. Email may already be in use.";
+        return "Failed to create user. Email may already be in use."
     }
 }
 
@@ -175,30 +170,27 @@ export async function updateUserModalAction(
     _prev: string | null | undefined,
     formData: FormData
 ): Promise<string | null> {
-    const id = Number(formData.get("id"));
-    if (!id) return "Missing user id";
+    const result = UpdateUserSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) return firstError(result.error)
 
-    const email = (formData.get("email") as string) || null;
-    const username = (formData.get("username") as string) || null;
-    const provider = (formData.get("provider") as string) || null;
-    const providerId = (formData.get("providerId") as string) || null;
-    const newUser = formData.get("newUser") === "true";
-    const password = (formData.get("password") as string) || "";
-    const noProvider = !provider || provider === "none";
+    const { id, email, username, provider, providerId, newUser, password } = result.data
+    const noProvider = provider === "none"
 
     try {
-        const data: Prisma.UserUpdateInput = {
-            email: email ?? undefined,
-            username,
-            newUser,
-            provider: noProvider ? null : provider,
-            providerId: noProvider ? null : providerId,
-            ...(password.trim() && { hashedPassword: await bcrypt.hash(password, 12) }),
-        };
-        await prisma.user.update({ where: { id }, data });
-        return null;
+        await prisma.user.update({
+            where: { id },
+            data: {
+                email: email ?? undefined,
+                username,
+                newUser,
+                provider: noProvider ? null : provider,
+                providerId: noProvider ? null : providerId,
+                ...(password && { hashedPassword: await bcrypt.hash(password, 12) }),
+            },
+        });
+        return null
     } catch {
-        return "Failed to update user.";
+        return "Failed to update user."
     }
 }
 
@@ -206,13 +198,13 @@ export async function deleteUserModalAction(
     _prev: string | null | undefined,
     formData: FormData
 ): Promise<string | null> {
-    const id = Number(formData.get("id"));
-    if (!id) return "Missing user id";
+    const result = DeleteUserSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) return firstError(result.error)
 
     try {
-        await prisma.user.delete({ where: { id } });
-        return null;
+        await prisma.user.delete({ where: { id: result.data.id } });
+        return null
     } catch {
-        return "Failed to delete user.";
+        return "Failed to delete user."
     }
 }
