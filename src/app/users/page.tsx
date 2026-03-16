@@ -6,7 +6,7 @@ import { User } from "@/lib/types";
 export default async function UserPage() {
     const users = await getUsers();
 
-    console.log("RAW ITEMS FROM API:", JSON.stringify(users[0], null, 2));
+    // console.log("RAW ITEMS FROM API:", JSON.stringify(users[0], null, 2));
 
     return (
         <div className="container mx-auto py-8">
@@ -47,7 +47,7 @@ export default async function UserPage() {
                     <tbody className="bg-white divide-y divide-gray-200">
                     {users.length === 0 ? (
                         <tr>
-                            <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                            <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                                 Nothing to show here
                             </td>
                         </tr>
