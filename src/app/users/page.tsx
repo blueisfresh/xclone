@@ -30,7 +30,7 @@ export default async function UserPage() {
                             Is this a New User ?
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Google Id
+                            Provider Id
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             Provider
@@ -63,7 +63,15 @@ export default async function UserPage() {
                                     {item.provider || "-"}
                                 </td>
                                 <td className="px-6 py-4">
-                                    {item.createdAt?.toString() || "-"}
+                                    {item.createdAt
+                                        ? new Intl.DateTimeFormat("en-GB", {
+                                              day: "2-digit",
+                                              month: "short",
+                                              year: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                          }).format(new Date(item.createdAt))
+                                        : "-"}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <Link
