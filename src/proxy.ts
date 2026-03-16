@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const SESSION_COOKIE = "session_token"
 
-// Routes accessible without a session
-const PUBLIC_ROUTES = new Set(["/", "/login"])
+const PUBLIC_ROUTES = new Set(["/", "/login", "/signup"])
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
@@ -11,8 +10,8 @@ export function proxy(request: NextRequest) {
 
     const isPublicRoute = PUBLIC_ROUTES.has(pathname)
 
-    // Authenticated user hitting login → send to home
-    if (pathname === "/login" && sessionToken) {
+    // Authenticated user hitting auth pages → send to home
+    if ((pathname === "/login" || pathname === "/signup") && sessionToken) {
         return NextResponse.redirect(new URL("/home", request.url))
     }
 
@@ -26,7 +25,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Match everything except Next.js internals and static assets
-        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+        // Exclude all Next.js internals (_next/*), favicon, and static assets
+        "/((?!_next/|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
     ],
 }

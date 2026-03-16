@@ -74,7 +74,7 @@ export default function LoginPage() {
                 {/* Footer */}
                 <p className="text-center text-xs text-muted-foreground">
                     Don&apos;t have an account?{" "}
-                    <a href="/register" className="font-medium text-foreground underline underline-offset-4 hover:opacity-70">
+                    <a href="/signup" className="font-medium text-foreground underline underline-offset-4 hover:opacity-70">
                         Sign up
                     </a>
                 </p>

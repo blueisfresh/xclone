@@ -187,7 +187,7 @@ export async function createThingModalAction(
 
 - Session token stored in `session_token` httpOnly cookie.
 - `getSession()` in `@/lib/actions/auth.ts` is the auth primitive — call it at the top of every protected server component or server action.
-- Middleware (`src/middleware.ts`) checks cookie presence only (Edge-safe). Full DB validation happens in `getSession()`.
+- Middleware lives in `src/proxy.ts` and exports `proxy` (not `middleware`) — this is the Next.js 16 convention. Do NOT create `middleware.ts`. Full DB validation happens in `getSession()`.
 - `loginAction` / `logoutAction` are server actions — import and use directly, no API route needed.
 
 ```ts
