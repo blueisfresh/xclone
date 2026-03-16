@@ -112,7 +112,7 @@ export async function getThings(page = 1, pageSize = THING_PAGE_SIZE) {
 
 - **Page component:** read and clamp `searchParams.page`, pass `page`, `total`, `pageSize` as props
 - **Table component:** show `"Showing X–Y of Z items"` and Prev / Next buttons; navigate with `router.push("?page=N")`
-- The `PAGE_SIZE` constant lives in the actions file and is exported so the page component stays in sync
+- The `PAGE_SIZE` constant lives in `lib/constants.ts` (not the actions file — `"use server"` files can only export async functions)
 
 ---
 
