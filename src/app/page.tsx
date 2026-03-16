@@ -6,9 +6,7 @@ import {debugColumns} from "@/lib/actions/debug";
 export default async function Home() {
   return (
     <>
-      <div>Home</div>
-      {/*<LoginPage />*/}
-        <UserPage/>
+      <div>Route Page</div>
     </>
   );
 }
