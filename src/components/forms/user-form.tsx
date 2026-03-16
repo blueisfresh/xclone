@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { User } from "@/lib/types";
 import { useState } from "react";
-import { createUserWithHash } from "@/lib/form-actions/create-user";
-import { updateUserAction } from "@/lib/form-actions/users";
+import { updateUserAction, createUserWithHash } from "@/lib/actions/users";
 
 interface UserFormProps {
     user?: User | null;

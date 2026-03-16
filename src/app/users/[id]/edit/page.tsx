@@ -1,28 +1,17 @@
-import { prisma } from "@/lib/prisma";
+import { getUserById } from "@/lib/actions/users";
 import UserForm from "@/components/forms/user-form";
 import { notFound } from "next/navigation";
 
 export default async function EditUserPage({
-                                               params,
-                                           }: {
-    params: Promise<{ id: string }>; // <- note: Promise
+    params,
+}: {
+    params: Promise<{ id: string }>;
 }) {
-    const { id } = await params; // <- await the params
+    const { id } = await params;
     const userId = Number(id);
     if (!Number.isFinite(userId)) return notFound();
 
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-            id: true,
-            email: true,
-            username: true,
-            newUser: true,
-            providerId: true,
-            provider: true,
-            createdAt: true,
-        },
-    });
+    const user = await getUserById(userId);
 
     if (!user) return notFound();
     return <UserForm user={user} />;
