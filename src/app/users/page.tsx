@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import {getUsers} from "@/lib/actions/users";
-import { User } from "@/lib/types";
+import { getUsers, UserWithProfile } from "@/lib/actions/users";
 
 export default async function UserPage() {
     const users = await getUsers();
@@ -52,7 +51,7 @@ export default async function UserPage() {
                             </td>
                         </tr>
                     ) : (
-                        users.map((item: User) => (
+                        users.map((item: UserWithProfile) => (
                             <tr key={item.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">{item.username}</td>
                                 <td className="px-6 py-4">{item.email || "-"}</td>

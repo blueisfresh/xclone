@@ -2,12 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { User } from "@/lib/types";
 import { useState } from "react";
-import { updateUserAction, createUserWithHash } from "@/lib/actions/users";
+import { updateUserAction, createUserWithHash, UserBase } from "@/lib/actions/users";
 
 interface UserFormProps {
-    user?: User | null;
+    user?: UserBase | null;
 }
 
 export default function UserForm({ user }: UserFormProps) {

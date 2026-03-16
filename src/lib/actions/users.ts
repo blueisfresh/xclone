@@ -1,10 +1,53 @@
 "use server"
 
-import { User } from "@/lib/types";
-import {prisma} from "@/lib/prisma";
-
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
+
+// Prisma-derived types — single source of truth, never drift from the schema
+
+export type UserBase = Prisma.UserGetPayload<{
+    select: {
+        id: true;
+        email: true;
+        username: true;
+        newUser: true;
+        providerId: true;
+        provider: true;
+        createdAt: true;
+    };
+}>;
+
+export type UserWithProfile = Prisma.UserGetPayload<{
+    select: {
+        id: true;
+        email: true;
+        username: true;
+        newUser: true;
+        providerId: true;
+        provider: true;
+        createdAt: true;
+        profile: {
+            select: {
+                id: true;
+                name: true;
+                bio: true;
+                img: true;
+                website: true;
+                dob: true;
+                userId: true;
+            };
+        };
+        _count: {
+            select: {
+                posts: true;
+                following: true;
+                followers: true;
+            };
+        };
+    };
+}>;
 
 export async function createUserWithHash(formData: FormData) {
     const email = formData.get("email") as string;
@@ -39,36 +82,26 @@ export async function updateUserAction(formData: FormData) {
     const email = (formData.get("email") as string) || null;
     const username = (formData.get("username") as string) || null;
     const provider = (formData.get("provider") as string) || null;
-    let providerId = (formData.get("providerId") as string) || null;
+    const providerId = (formData.get("providerId") as string) || null;
     const newUser = formData.get("newUser") === "true";
     const password = (formData.get("password") as string) || "";
 
-    const data: {
-        email?: string | null;
-        username?: string | null;
-        newUser?: boolean;
-        provider?: string | null;
-        providerId?: string | null;
-        hashedPassword?: string;
-    } = { email, username, newUser };
+    const noProvider = !provider || provider === "none";
 
-    if (!provider || provider === "none") {
-        data.provider = null;
-        data.providerId = null;
-    } else {
-        data.provider = provider;
-        data.providerId = providerId;
-    }
-
-    if (password.trim()) {
-        data.hashedPassword = await bcrypt.hash(password, 12);
-    }
+    const data: Prisma.UserUpdateInput = {
+        email: email ?? undefined,
+        username,
+        newUser,
+        provider: noProvider ? null : provider,
+        providerId: noProvider ? null : providerId,
+        ...(password.trim() && { hashedPassword: await bcrypt.hash(password, 12) }),
+    };
 
     await prisma.user.update({ where: { id }, data });
     redirect("/users");
 }
 
-export async function getUsers(): Promise<User[]> {
+export async function getUsers(): Promise<UserWithProfile[]> {
     try {
         const users = await prisma.user.findMany({
             select: {
@@ -102,7 +135,7 @@ export async function getUsers(): Promise<User[]> {
             }
         });
 
-        return users as User[];
+        return users;
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch users.");
@@ -111,15 +144,8 @@ export async function getUsers(): Promise<User[]> {
 
 export async function updateUser(
     id: number,
-    data: {
-        email?: string;
-        username?: string | null;
-        newuser?: boolean | null;
-        hashedpassword?: string | null;
-        providerId?: string | null;
-        provider?: string | null;
-    }
-): Promise<User> {
+    data: Prisma.UserUpdateInput
+): Promise<UserBase> {
     try {
         const updatedUser = await prisma.user.update({
             where: { id },
@@ -132,35 +158,17 @@ export async function updateUser(
                 providerId: true,
                 provider: true,
                 createdAt: true,
-                profile: {
-                    select: {
-                        id: true,
-                        name: true,
-                        bio: true,
-                        img: true,
-                        website: true,
-                        dob: true,
-                        userId: true,
-                    },
-                },
-                _count: {
-                    select: {
-                        posts: true,
-                        following: true,
-                        followers: true,
-                    },
-                },
             },
         });
 
-        return updatedUser as User;
+        return updatedUser;
     } catch (error) {
         console.error("Error updating user:", error);
         throw new Error("Failed to update user.");
     }
 }
 
-export async function getUserById(id: number): Promise<User | null> {
+export async function getUserById(id: number): Promise<UserBase | null> {
     try {
         const user = await prisma.user.findUnique({
             where: { id },
@@ -174,7 +182,7 @@ export async function getUserById(id: number): Promise<User | null> {
                 createdAt: true,
             },
         });
-        return user as User | null;
+        return user;
     } catch (error) {
         console.error("Error fetching user:", error);
         throw new Error("Failed to fetch user.");
