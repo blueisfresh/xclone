@@ -95,6 +95,36 @@ export async function updateUser(
     }
 }
 
+export async function getUserById(id: number): Promise<User | null> {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                email: true,
+                username: true,
+                newUser: true,
+                providerId: true,
+                provider: true,
+                createdAt: true,
+            },
+        });
+        return user as User | null;
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        throw new Error("Failed to fetch user.");
+    }
+}
+
+export async function deleteUser(id: number): Promise<void> {
+    try {
+        await prisma.user.delete({ where: { id } });
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        throw new Error("Failed to delete user.");
+    }
+}
+
 export async function createUser(data: {
     email: string;
     username?: string | null;
