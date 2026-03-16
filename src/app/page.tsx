@@ -4,7 +4,6 @@ import UserPage from "./users/page";
 import {debugColumns} from "@/lib/actions/debug";
 
 export default async function Home() {
-    await debugColumns();
   return (
     <>
       <div>Home</div>
