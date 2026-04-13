@@ -11,9 +11,10 @@ interface PostFeedProps {
     page: number
     pageSize: number
     currentUserId?: number
+    emptyMessage?: string
 }
 
-export default function PostFeed({ posts, total, page, pageSize, currentUserId }: PostFeedProps) {
+export default function PostFeed({ posts, total, page, pageSize, currentUserId, emptyMessage = "No posts yet. Be the first to post!" }: PostFeedProps) {
     const router = useRouter()
     const totalPages = Math.ceil(total / pageSize)
     const start = total === 0 ? 0 : (page - 1) * pageSize + 1
@@ -23,7 +24,7 @@ export default function PostFeed({ posts, total, page, pageSize, currentUserId }
         <div className="border border-border rounded-xl overflow-hidden">
             {posts.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                    No posts yet. Be the first to post!
+                    {emptyMessage}
                 </div>
             ) : (
                 posts.map((post) => (
