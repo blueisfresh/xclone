@@ -16,7 +16,7 @@ export default async function HomePage({
     const { page: pageParam } = await searchParams
     const page = Math.max(1, Number(pageParam) || 1)
 
-    const { posts, total } = await getPosts(page)
+    const { posts, total } = await getPosts(page, POSTS_PAGE_SIZE, user.id)
 
     return (
         <div className="container mx-auto py-8 max-w-2xl">
