@@ -74,6 +74,14 @@ export async function getPosts(
     }
 }
 
+export async function getNewestPostId(): Promise<number | null> {
+    const post = await prisma.post.findFirst({
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+    })
+    return post?.id ?? null
+}
+
 export async function getPostById(
     id: number,
     currentUserId?: number
