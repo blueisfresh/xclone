@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
 import { getSession } from "@/lib/actions/auth"
-import { CreatePostSchema, DeletePostSchema } from "@/lib/validations/posts"
+import { CreatePostSchema, DeletePostSchema, LikePostSchema, RepostPostSchema } from "@/lib/validations/posts"
 import { POSTS_PAGE_SIZE } from "@/lib/constants"
 
 // ── Select consts ──────────────────────────────────────────────────────────
@@ -24,16 +24,20 @@ const postSelect = {
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type PostWithMeta = Prisma.PostGetPayload<{ select: typeof postSelect }>
+export type PostWithMeta = Prisma.PostGetPayload<{ select: typeof postSelect }> & {
+    isLikedByUser?: boolean
+    isRepostedByUser?: boolean
+}
 
 // ── Read ───────────────────────────────────────────────────────────────────
 
 export async function getPosts(
     page = 1,
-    pageSize = POSTS_PAGE_SIZE
+    pageSize = POSTS_PAGE_SIZE,
+    currentUserId?: number
 ): Promise<{ posts: PostWithMeta[]; total: number }> {
     const skip = (page - 1) * pageSize
-    const [posts, total] = await Promise.all([
+    const [posts, total, userLikes, userReposts] = await Promise.all([
         prisma.post.findMany({
             select: postSelect,
             orderBy: { createdAt: "desc" },
@@ -41,8 +45,27 @@ export async function getPosts(
             take: pageSize,
         }),
         prisma.post.count(),
+        currentUserId ? prisma.like.findMany({
+            where: { userId: currentUserId },
+            select: { postId: true },
+        }) : Promise.resolve([]),
+        currentUserId ? prisma.repost.findMany({
+            where: { userId: currentUserId },
+            select: { postId: true },
+        }) : Promise.resolve([]),
     ])
-    return { posts, total }
+
+    const userLikeIds = new Set(userLikes.map((l) => l.postId))
+    const userRepostIds = new Set(userReposts.map((r) => r.postId))
+
+    return {
+        posts: posts.map((p) => ({
+            ...p,
+            isLikedByUser: userLikeIds.has(p.id),
+            isRepostedByUser: userRepostIds.has(p.id),
+        })),
+        total,
+    }
 }
 
 // ── Modal actions ──────────────────────────────────────────────────────────
@@ -89,5 +112,74 @@ export async function deletePostAction(
         return null
     } catch {
         return "Failed to delete post"
+    }
+}
+
+export async function likePostAction(
+    _prev: string | null | undefined,
+    formData: FormData
+): Promise<string | null> {
+    const user = await getSession()
+    if (!user) return "Not authenticated"
+
+    const result = LikePostSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) return result.error.issues[0]?.message ?? "Validation failed"
+
+    const { postId } = result.data
+
+    try {
+        // finding like record
+        const existing = await prisma.like.findUnique({
+            where: { postId_userId: { postId, userId: user.id } },
+        })
+
+        if (existing) {
+            // Unlike
+            await prisma.like.delete({
+                where: { postId_userId: { postId, userId: user.id } },
+            })
+        } else {
+            // Like
+            await prisma.like.create({
+                data: { postId, userId: user.id },
+            })
+        }
+        return null
+    } catch {
+        return "Failed to update like"
+    }
+}
+
+export async function repostPostAction(
+    _prev: string | null | undefined,
+    formData: FormData
+): Promise<string | null> {
+    const user = await getSession()
+    if (!user) return "Not authenticated"
+
+    const result = RepostPostSchema.safeParse(Object.fromEntries(formData))
+    if (!result.success) return result.error.issues[0]?.message ?? "Validation failed"
+
+    const { postId } = result.data
+
+    try {
+        const existing = await prisma.repost.findUnique({
+            where: { postId_userId: { postId, userId: user.id } },
+        })
+
+        if (existing) {
+            // Unrepost
+            await prisma.repost.delete({
+                where: { postId_userId: { postId, userId: user.id } },
+            })
+        } else {
+            // Repost
+            await prisma.repost.create({
+                data: { postId, userId: user.id },
+            })
+        }
+        return null
+    } catch {
+        return "Failed to update repost"
     }
 }
