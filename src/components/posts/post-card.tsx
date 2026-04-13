@@ -84,6 +84,7 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, currentUserId }: PostCardProps) {
+    const router = useRouter()
     const [showDelete, setShowDelete] = useState(false)
     const [isPending, startTransition] = useTransition()
 
@@ -157,7 +158,10 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
 
     return (
         <>
-            <div className="p-4 border-b border-border bg-background hover:bg-muted/30 transition-colors last:border-b-0">
+            <div
+                className="p-4 border-b border-border bg-background hover:bg-muted/30 transition-colors last:border-b-0 cursor-pointer"
+                onClick={() => router.push(`/posts/${post.id}`)}
+            >
                 <div className="flex gap-3">
                     {/* Avatar */}
                     <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0 select-none">
@@ -184,7 +188,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                             </div>
                             {isOwner && (
                                 <button
-                                    onClick={() => setShowDelete(true)}
+                                    onClick={(e) => { e.stopPropagation(); setShowDelete(true) }}
                                     className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1 rounded"
                                     aria-label="Delete post"
                                 >
@@ -193,13 +197,20 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                             )}
                         </div>
 
+                        {/* Reply label */}
+                        {post.parentPostId && (
+                            <p className="text-xs text-muted-foreground mb-1">
+                                Replying to @{post.parent?.user?.username ?? "unknown"}
+                            </p>
+                        )}
+
                         {/* Content */}
                         <p className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">
                             {post.content}
                         </p>
 
                         {/* Action buttons */}
-                        <div className="flex items-center gap-6 mt-3">
+                        <div className="flex items-center gap-6 mt-3" onClick={(e) => e.stopPropagation()}>
                             {/* Reply */}
                             <button
                                 data-action="reply"

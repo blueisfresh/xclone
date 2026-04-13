@@ -12,6 +12,12 @@ const postSelect = {
     id: true,
     content: true,
     createdAt: true,
+    parentPostId: true,
+    parent: {
+        select: {
+            user: { select: { username: true } },
+        },
+    },
     user: {
         select: {
             id: true,
