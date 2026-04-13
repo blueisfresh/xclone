@@ -199,9 +199,12 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                         </p>
 
                         {/* Action buttons */}
-                        <div className="flex items-center gap-6 mt-3 text-muted-foreground">
+                        <div className="flex items-center gap-6 mt-3">
+                            {/* Reply */}
                             <button
-                                className="flex items-center gap-1.5 text-xs hover:text-blue-500 transition-colors disabled:opacity-50"
+                                data-action="reply"
+                                onClick={() => router.push(`/posts/${post.id}`)}
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors active:scale-110 disabled:opacity-50"
                                 disabled={!canInteract || isPending}
                                 aria-label={`${post._count.replies} replies`}
                             >
@@ -209,35 +212,29 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                                 <span>{post._count.replies}</span>
                             </button>
 
+                            {/* Repost */}
                             <button
+                                data-action="repost"
                                 onClick={handleRepost}
-                                className={`flex items-center gap-1.5 text-xs transition-colors disabled:opacity-50 ${
-                                    isReposted
-                                        ? "text-green-500 hover:text-green-600"
-                                        : "hover:text-green-500"
-                                }`}
+                                style={isReposted ? { color: "#2FA084" } : undefined}
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors active:scale-110 disabled:opacity-50"
                                 disabled={!canInteract || isPending}
                                 aria-label={isReposted ? "Unrepost" : "Repost"}
                             >
-                                <Repeat2
-                                    className={`w-3.5 h-3.5 ${isReposted ? "fill-green-500" : ""}`}
-                                />
+                                <Repeat2 className={`w-3.5 h-3.5 ${isReposted ? "fill-current" : ""}`} />
                                 <span>{repostCount}</span>
                             </button>
 
+                            {/* Like */}
                             <button
+                                data-action="like"
                                 onClick={handleLike}
-                                className={`flex items-center gap-1.5 text-xs transition-colors disabled:opacity-50 ${
-                                    isLiked
-                                        ? "text-red-500 hover:text-red-600"
-                                        : "hover:text-red-500"
-                                }`}
+                                style={isLiked ? { color: "#f87171" } : undefined}
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors active:scale-110 disabled:opacity-50"
                                 disabled={!canInteract || isPending}
                                 aria-label={isLiked ? "Unlike" : "Like"}
                             >
-                                <Heart
-                                    className={`w-3.5 h-3.5 ${isLiked ? "fill-red-500" : ""}`}
-                                />
+                                <Heart className={`w-3.5 h-3.5 ${isLiked ? "fill-current" : ""}`} />
                                 <span>{likeCount}</span>
                             </button>
                         </div>
