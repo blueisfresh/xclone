@@ -5,6 +5,7 @@ export const CreatePostSchema = z.object({
         .string()
         .min(1, "Post cannot be empty")
         .max(280, "Post cannot exceed 280 characters"),
+    parentPostId: z.coerce.number().int().positive().optional(),
 })
 
 export const DeletePostSchema = z.object({

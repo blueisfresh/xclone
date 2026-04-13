@@ -68,6 +68,72 @@ export async function getPosts(
     }
 }
 
+export async function getPostById(
+    id: number,
+    currentUserId?: number
+): Promise<PostWithMeta | null> {
+    const [post, userLike, userRepost] = await Promise.all([
+        prisma.post.findUnique({ where: { id }, select: postSelect }),
+        currentUserId
+            ? prisma.like.findUnique({
+                  where: { postId_userId: { postId: id, userId: currentUserId } },
+                  select: { postId: true },
+              })
+            : Promise.resolve(null),
+        currentUserId
+            ? prisma.repost.findUnique({
+                  where: { postId_userId: { postId: id, userId: currentUserId } },
+                  select: { postId: true },
+              })
+            : Promise.resolve(null),
+    ])
+
+    if (!post) return null
+
+    return {
+        ...post,
+        isLikedByUser: !!userLike,
+        isRepostedByUser: !!userRepost,
+    }
+}
+
+export async function getReplies(
+    postId: number,
+    page = 1,
+    pageSize = POSTS_PAGE_SIZE,
+    currentUserId?: number
+): Promise<{ posts: PostWithMeta[]; total: number }> {
+    const skip = (page - 1) * pageSize
+    const [posts, total, userLikes, userReposts] = await Promise.all([
+        prisma.post.findMany({
+            where: { parentPostId: postId },
+            select: postSelect,
+            orderBy: { createdAt: "asc" },
+            skip,
+            take: pageSize,
+        }),
+        prisma.post.count({ where: { parentPostId: postId } }),
+        currentUserId
+            ? prisma.like.findMany({ where: { userId: currentUserId }, select: { postId: true } })
+            : Promise.resolve([]),
+        currentUserId
+            ? prisma.repost.findMany({ where: { userId: currentUserId }, select: { postId: true } })
+            : Promise.resolve([]),
+    ])
+
+    const userLikeIds = new Set(userLikes.map((l) => l.postId))
+    const userRepostIds = new Set(userReposts.map((r) => r.postId))
+
+    return {
+        posts: posts.map((p) => ({
+            ...p,
+            isLikedByUser: userLikeIds.has(p.id),
+            isRepostedByUser: userRepostIds.has(p.id),
+        })),
+        total,
+    }
+}
+
 // ── Modal actions ──────────────────────────────────────────────────────────
 
 export async function createPostAction(
@@ -82,7 +148,11 @@ export async function createPostAction(
 
     try {
         await prisma.post.create({
-            data: { content: result.data.content, userId: user.id },
+            data: {
+                content: result.data.content,
+                userId: user.id,
+                parentPostId: result.data.parentPostId ?? null,
+            },
         })
         return null
     } catch {
