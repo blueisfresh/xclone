@@ -1,8 +1,8 @@
 "use client"
 
-import { useActionState, useEffect, useRef, useState } from "react"
+import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
+import { Heart, MessageCircle, Repeat2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -12,7 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { PostWithMeta, deletePostAction } from "@/lib/actions/posts"
+import { PostWithMeta, deletePostAction, likePostAction, repostPostAction } from "@/lib/actions/posts"
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -85,12 +85,75 @@ interface PostCardProps {
 
 export default function PostCard({ post, currentUserId }: PostCardProps) {
     const [showDelete, setShowDelete] = useState(false)
+    const [isPending, startTransition] = useTransition()
+
+    // Optimistic state for interactions - assuming that the server will succeed and update the UI instantly
+    const [likeCount, setLikeCount] = useState(post._count.likes)
+    const [isLiked, setIsLiked] = useState(post.isLikedByUser || false)
+    const [repostCount, setRepostCount] = useState(post._count.reposts)
+    const [isReposted, setIsReposted] = useState(post.isRepostedByUser || false)
 
     const author = post.user
     const displayName = author?.profile?.name ?? author?.username ?? "Unknown"
     const handle = author?.username ? `@${author.username}` : null
     const initials = displayName[0]?.toUpperCase() ?? "?"
     const isOwner = currentUserId !== undefined && author?.id === currentUserId
+    const canInteract = currentUserId !== undefined
+
+    const handleLike = () => {
+        if (!canInteract) return
+
+        // Optimistic update
+        const newLiked = !isLiked
+        setIsLiked(newLiked)
+        setLikeCount(newLiked ? likeCount + 1 : likeCount - 1)
+
+        startTransition(async () => {
+            try {
+                const formData = new FormData()
+                formData.append("postId", String(post.id))
+                const result = await likePostAction(null, formData)
+
+                if (result) {
+                    // Error occurred, revert
+                    setIsLiked(!newLiked)
+                    setLikeCount(!newLiked ? likeCount + 1 : likeCount - 1)
+                }
+            } catch {
+                // Revert on error
+                setIsLiked(!newLiked)
+                setLikeCount(!newLiked ? likeCount + 1 : likeCount - 1)
+            }
+        })
+    }
+
+    const handleRepost = () => {
+        if (!canInteract) return
+
+        // Optimistic update
+        const newReposted = !isReposted
+        setIsReposted(newReposted)
+        setRepostCount(newReposted ? repostCount + 1 : repostCount - 1)
+
+        // while server is processing like the like button is disabled to prevent double clicks
+        startTransition(async () => {
+            try {
+                const formData = new FormData()
+                formData.append("postId", String(post.id))
+                const result = await repostPostAction(null, formData)
+
+                if (result) {
+                    // Error occurred, revert
+                    setIsReposted(!newReposted)
+                    setRepostCount(!newReposted ? repostCount + 1 : repostCount - 1)
+                }
+            } catch {
+                // Revert on error
+                setIsReposted(!newReposted)
+                setRepostCount(!newReposted ? repostCount + 1 : repostCount - 1)
+            }
+        })
+    }
 
     return (
         <>
@@ -135,17 +198,48 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                             {post.content}
                         </p>
 
-                        {/* Counts */}
-                        <div className="flex items-center gap-5 mt-3">
-                            <span className="text-xs text-muted-foreground">
-                                {post._count.replies} {post._count.replies === 1 ? "reply" : "replies"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {post._count.reposts} {post._count.reposts === 1 ? "repost" : "reposts"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {post._count.likes} {post._count.likes === 1 ? "like" : "likes"}
-                            </span>
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-6 mt-3 text-muted-foreground">
+                            <button
+                                className="flex items-center gap-1.5 text-xs hover:text-blue-500 transition-colors disabled:opacity-50"
+                                disabled={!canInteract || isPending}
+                                aria-label={`${post._count.replies} replies`}
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                                <span>{post._count.replies}</span>
+                            </button>
+
+                            <button
+                                onClick={handleRepost}
+                                className={`flex items-center gap-1.5 text-xs transition-colors disabled:opacity-50 ${
+                                    isReposted
+                                        ? "text-green-500 hover:text-green-600"
+                                        : "hover:text-green-500"
+                                }`}
+                                disabled={!canInteract || isPending}
+                                aria-label={isReposted ? "Unrepost" : "Repost"}
+                            >
+                                <Repeat2
+                                    className={`w-4 h-4 ${isReposted ? "fill-green-500" : ""}`}
+                                />
+                                <span>{repostCount}</span>
+                            </button>
+
+                            <button
+                                onClick={handleLike}
+                                className={`flex items-center gap-1.5 text-xs transition-colors disabled:opacity-50 ${
+                                    isLiked
+                                        ? "text-red-500 hover:text-red-600"
+                                        : "hover:text-red-500"
+                                }`}
+                                disabled={!canInteract || isPending}
+                                aria-label={isLiked ? "Unlike" : "Like"}
+                            >
+                                <Heart
+                                    className={`w-4 h-4 ${isLiked ? "fill-red-500" : ""}`}
+                                />
+                                <span>{likeCount}</span>
+                            </button>
                         </div>
                     </div>
                 </div>
