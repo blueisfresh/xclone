@@ -205,7 +205,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                                 disabled={!canInteract || isPending}
                                 aria-label={`${post._count.replies} replies`}
                             >
-                                <MessageCircle className="w-4 h-4" />
+                                <MessageCircle className="w-3.5 h-3.5" />
                                 <span>{post._count.replies}</span>
                             </button>
 
@@ -220,7 +220,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                                 aria-label={isReposted ? "Unrepost" : "Repost"}
                             >
                                 <Repeat2
-                                    className={`w-4 h-4 ${isReposted ? "fill-green-500" : ""}`}
+                                    className={`w-3.5 h-3.5 ${isReposted ? "fill-green-500" : ""}`}
                                 />
                                 <span>{repostCount}</span>
                             </button>
@@ -236,7 +236,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                                 aria-label={isLiked ? "Unlike" : "Like"}
                             >
                                 <Heart
-                                    className={`w-4 h-4 ${isLiked ? "fill-red-500" : ""}`}
+                                    className={`w-3.5 h-3.5 ${isLiked ? "fill-red-500" : ""}`}
                                 />
                                 <span>{likeCount}</span>
                             </button>
