@@ -4,13 +4,17 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Users } from "lucide-react"
 
-const links = [
-    { href: "/home",  label: "Home",  icon: Home },
-    { href: "/users", label: "Users", icon: Users },
-]
+interface NavLinksProps {
+    isAdmin: boolean
+}
 
-export default function NavLinks() {
+export default function NavLinks({ isAdmin }: NavLinksProps) {
     const pathname = usePathname()
+
+    const links = [
+        { href: "/home",  label: "Home",  icon: Home },
+        ...(isAdmin ? [{ href: "/users", label: "Users", icon: Users }] : []),
+    ]
 
     return (
         <nav className="flex items-center gap-1">

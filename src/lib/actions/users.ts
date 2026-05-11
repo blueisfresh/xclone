@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { CreateUserSchema, UpdateUserSchema, DeleteUserSchema } from "@/lib/validations/users";
 import { USERS_PAGE_SIZE } from "@/lib/constants";
+import { getSession } from "@/lib/actions/auth";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ const userBaseSelect = {
     providerId: true,
     provider: true,
     createdAt: true,
+    role: { select: { name: true } },
 } satisfies Prisma.UserSelect;
 
 const userWithProfileSelect = {
@@ -157,6 +159,9 @@ export async function createUserModalAction(
     _prev: string | null | undefined,
     formData: FormData
 ): Promise<string | null> {
+    const session = await getSession()
+    if (!session || session.role.name !== "ADMIN") return "Unauthorized"
+
     const result = CreateUserSchema.safeParse(Object.fromEntries(formData))
     if (!result.success) return firstError(result.error)
 
@@ -184,6 +189,9 @@ export async function updateUserModalAction(
     _prev: string | null | undefined,
     formData: FormData
 ): Promise<string | null> {
+    const session = await getSession()
+    if (!session || session.role.name !== "ADMIN") return "Unauthorized"
+
     const result = UpdateUserSchema.safeParse(Object.fromEntries(formData))
     if (!result.success) return firstError(result.error)
 
@@ -212,6 +220,9 @@ export async function deleteUserModalAction(
     _prev: string | null | undefined,
     formData: FormData
 ): Promise<string | null> {
+    const session = await getSession()
+    if (!session || session.role.name !== "ADMIN") return "Unauthorized"
+
     const result = DeleteUserSchema.safeParse(Object.fromEntries(formData))
     if (!result.success) return firstError(result.error)
 

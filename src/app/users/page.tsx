@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation"
+import { getSession } from "@/lib/actions/auth"
 import { getUsers } from "@/lib/actions/users"
 import { USERS_PAGE_SIZE } from "@/lib/constants"
 import UsersTable from "@/components/users/users-table"
@@ -7,6 +9,10 @@ export default async function UsersPage({
 }: {
     searchParams: Promise<{ page?: string }>
 }) {
+    const user = await getSession()
+    if (!user) redirect("/login")
+    if (user.role.name !== "ADMIN") redirect("/home")
+
     const { page: pageParam } = await searchParams
     const page = Math.max(1, Number(pageParam) || 1)
 

@@ -18,6 +18,7 @@ const sessionUserSelect = {
     provider: true,
     providerId: true,
     createdAt: true,
+    role: { select: { name: true } },
 } satisfies Prisma.UserSelect
 
 export type SessionUser = Prisma.UserGetPayload<{ select: typeof sessionUserSelect }>

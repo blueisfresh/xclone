@@ -33,7 +33,16 @@ async function main() {
 
     const hash = await bcrypt.hash(SEED_PASSWORD, BCRYPT_ROUNDS)
 
-    // ── 1. Users ──────────────────────────────────────────────────────────────
+    // ── 1. Roles ──────────────────────────────────────────────────────────────
+
+    const [roleUser, roleAdmin] = await Promise.all([
+        prisma.role.create({ data: { id: 1, name: "USER" } }),
+        prisma.role.create({ data: { id: 2, name: "ADMIN" } }),
+    ])
+
+    console.log(`   ✓ ${2} roles created (USER, ADMIN)`)
+
+    // ── 2. Users ──────────────────────────────────────────────────────────────
 
     const userData = [
         {
@@ -137,14 +146,20 @@ async function main() {
     const users = await Promise.all(
         userData.map(({ email, username }) =>
             prisma.user.create({
-                data: { email, username, hashedPassword: hash, newUser: false },
+                data: {
+                    email,
+                    username,
+                    hashedPassword: hash,
+                    newUser: false,
+                    roleId: username === "elias_g" ? roleAdmin.id : roleUser.id,
+                },
             })
         )
     )
 
-    console.log(`   ✓ ${users.length} users created`)
+    console.log(`   ✓ ${users.length} users created (1 admin, ${users.length - 1} regular)`)
 
-    // ── 2. Profiles ───────────────────────────────────────────────────────────
+    // ── 3. Profiles ───────────────────────────────────────────────────────────
 
     await Promise.all(
         users.map((user, i) =>
@@ -162,7 +177,7 @@ async function main() {
 
     console.log(`   ✓ ${users.length} profiles created`)
 
-    // ── 3. Posts ──────────────────────────────────────────────────────────────
+    // ── 4. Posts ──────────────────────────────────────────────────────────────
 
     const postData = [
         // userIdx 0 — elias_g
@@ -404,7 +419,7 @@ async function main() {
 
     console.log(`   ✓ ${posts.length} posts created`)
 
-    // ── 4. Replies ────────────────────────────────────────────────────────────
+    // ── 5. Replies ────────────────────────────────────────────────────────────
 
     const replyData = [
         {
@@ -526,7 +541,7 @@ async function main() {
 
     const allPosts = [...posts, ...replies]
 
-    // ── 5. Likes ──────────────────────────────────────────────────────────────
+    // ── 6. Likes ──────────────────────────────────────────────────────────────
 
     const likeSet = new Set<string>()
     const likePairs: { postId: number; userId: number }[] = []
@@ -571,7 +586,7 @@ async function main() {
 
     console.log(`   ✓ ${likePairs.length} likes created`)
 
-    // ── 6. Reposts ────────────────────────────────────────────────────────────
+    // ── 7. Reposts ────────────────────────────────────────────────────────────
 
     const repostSet = new Set<string>()
     const repostPairs: { postId: number; userId: number }[] = []
@@ -599,7 +614,7 @@ async function main() {
 
     console.log(`   ✓ ${repostPairs.length} reposts created`)
 
-    // ── 7. Follows ────────────────────────────────────────────────────────────
+    // ── 8. Follows ────────────────────────────────────────────────────────────
 
     const followSet = new Set<string>()
     const followPairs: { userId: number; followerId: number }[] = []
@@ -627,7 +642,7 @@ async function main() {
 
     console.log(`   ✓ ${followPairs.length} follows created`)
 
-    // ── 8. Chats + Messages ───────────────────────────────────────────────────
+    // ── 9. Chats + Messages ───────────────────────────────────────────────────
 
     const chatConvos = [
         {
@@ -745,7 +760,7 @@ async function main() {
 
     console.log(`   ✓ ${chatConvos.length} chats / ${totalMessages} messages created`)
 
-    // ── 9. Notifications ──────────────────────────────────────────────────────
+    // ── 10. Notifications ─────────────────────────────────────────────────────
 
     type NotificationInput = {
         type: string

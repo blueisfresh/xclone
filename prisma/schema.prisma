@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // "USER" | "ADMIN"
+  users User[]
+}
+
 model User {
   id             Int      @id @default(autoincrement())
   email          String   @unique
@@ -16,6 +22,9 @@ model User {
   providerId     String?
   provider       String?
   createdAt      DateTime @default(now()) @db.Timestamptz
+
+  roleId Int  @default(1)
+  role   Role @relation(fields: [roleId], references: [id])
 
   profile               Profile?
   sessions              Session[]
