@@ -33,6 +33,7 @@ const postSelect = {
 export type PostWithMeta = Prisma.PostGetPayload<{ select: typeof postSelect }> & {
     isLikedByUser?: boolean
     isRepostedByUser?: boolean
+    isFollowedByUser?: boolean
 }
 
 // ── Read ───────────────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ export async function getPosts(
     currentUserId?: number
 ): Promise<{ posts: PostWithMeta[]; total: number }> {
     const skip = (page - 1) * pageSize
-    const [posts, total, userLikes, userReposts] = await Promise.all([
+    const [posts, total, userLikes, userReposts, userFollows] = await Promise.all([
         prisma.post.findMany({
             select: postSelect,
             orderBy: { createdAt: "desc" },
@@ -59,16 +60,22 @@ export async function getPosts(
             where: { userId: currentUserId },
             select: { postId: true },
         }) : Promise.resolve([]),
+        currentUserId ? prisma.userFollows.findMany({
+            where: { followerId: currentUserId },
+            select: { userId: true },
+        }) : Promise.resolve([]),
     ])
 
     const userLikeIds = new Set(userLikes.map((l) => l.postId))
     const userRepostIds = new Set(userReposts.map((r) => r.postId))
+    const followedUserIds = new Set(userFollows.map((f) => f.userId))
 
     return {
         posts: posts.map((p) => ({
             ...p,
             isLikedByUser: userLikeIds.has(p.id),
             isRepostedByUser: userRepostIds.has(p.id),
+            isFollowedByUser: followedUserIds.has(p.user?.id ?? -1),
         })),
         total,
     }
@@ -86,8 +93,10 @@ export async function getPostById(
     id: number,
     currentUserId?: number
 ): Promise<PostWithMeta | null> {
-    const [post, userLike, userRepost] = await Promise.all([
-        prisma.post.findUnique({ where: { id }, select: postSelect }),
+    const postData = await prisma.post.findUnique({ where: { id }, select: postSelect })
+    if (!postData) return null
+
+    const [userLike, userRepost, userFollow] = await Promise.all([
         currentUserId
             ? prisma.like.findUnique({
                   where: { postId_userId: { postId: id, userId: currentUserId } },
@@ -100,14 +109,18 @@ export async function getPostById(
                   select: { postId: true },
               })
             : Promise.resolve(null),
+        currentUserId && postData.user?.id
+            ? prisma.userFollows.findUnique({
+                  where: { userId_followerId: { userId: postData.user.id, followerId: currentUserId } },
+              })
+            : Promise.resolve(null),
     ])
 
-    if (!post) return null
-
     return {
-        ...post,
+        ...postData,
         isLikedByUser: !!userLike,
         isRepostedByUser: !!userRepost,
+        isFollowedByUser: !!userFollow,
     }
 }
 
@@ -118,7 +131,7 @@ export async function getReplies(
     currentUserId?: number
 ): Promise<{ posts: PostWithMeta[]; total: number }> {
     const skip = (page - 1) * pageSize
-    const [posts, total, userLikes, userReposts] = await Promise.all([
+    const [posts, total, userLikes, userReposts, userFollows] = await Promise.all([
         prisma.post.findMany({
             where: { parentPostId: postId },
             select: postSelect,
@@ -133,16 +146,24 @@ export async function getReplies(
         currentUserId
             ? prisma.repost.findMany({ where: { userId: currentUserId }, select: { postId: true } })
             : Promise.resolve([]),
+        currentUserId
+            ? prisma.userFollows.findMany({
+                  where: { followerId: currentUserId },
+                  select: { userId: true },
+              })
+            : Promise.resolve([]),
     ])
 
     const userLikeIds = new Set(userLikes.map((l) => l.postId))
     const userRepostIds = new Set(userReposts.map((r) => r.postId))
+    const followedUserIds = new Set(userFollows.map((f) => f.userId))
 
     return {
         posts: posts.map((p) => ({
             ...p,
             isLikedByUser: userLikeIds.has(p.id),
             isRepostedByUser: userRepostIds.has(p.id),
+            isFollowedByUser: followedUserIds.has(p.user?.id ?? -1),
         })),
         total,
     }

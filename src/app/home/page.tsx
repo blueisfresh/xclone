@@ -12,7 +12,7 @@ export default async function HomePage({
     searchParams: Promise<{ page?: string }>
 }) {
     const user = await getSession()
-    if (!user) redirect("/login")
+    if (!user) redirect("/api/auth/signout")
 
     const { page: pageParam } = await searchParams
     const page = Math.max(1, Number(pageParam) || 1)

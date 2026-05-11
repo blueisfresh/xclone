@@ -13,6 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { PostWithMeta, deletePostAction, likePostAction, repostPostAction } from "@/lib/actions/posts"
+import FollowButton from "@/components/follows/follow-button"
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -186,15 +187,24 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                                     {formatRelativeTime(post.createdAt)}
                                 </span>
                             </div>
-                            {isOwner && (
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setShowDelete(true) }}
-                                    className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1 rounded"
-                                    aria-label="Delete post"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                            )}
+                            <div className="flex items-center gap-1 shrink-0">
+                                {!isOwner && canInteract && author?.id && (
+                                    <FollowButton
+                                        targetUserId={author.id}
+                                        initialIsFollowing={post.isFollowedByUser ?? false}
+                                        currentUserId={currentUserId}
+                                    />
+                                )}
+                                {isOwner && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowDelete(true) }}
+                                        className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1 rounded"
+                                        aria-label="Delete post"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Reply label */}
