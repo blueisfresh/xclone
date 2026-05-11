@@ -81,6 +81,49 @@ export async function getPosts(
     }
 }
 
+export async function getFollowingPosts(
+    page = 1,
+    pageSize = POSTS_PAGE_SIZE,
+    currentUserId: number
+): Promise<{ posts: PostWithMeta[]; total: number }> {
+    const skip = (page - 1) * pageSize
+
+    const follows = await prisma.userFollows.findMany({
+        where: { followerId: currentUserId },
+        select: { userId: true },
+    })
+    const followedIds = follows.map((f) => f.userId)
+
+    if (followedIds.length === 0) return { posts: [], total: 0 }
+
+    const [posts, total, userLikes, userReposts] = await Promise.all([
+        prisma.post.findMany({
+            where: { userId: { in: followedIds } },
+            select: postSelect,
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: pageSize,
+        }),
+        prisma.post.count({ where: { userId: { in: followedIds } } }),
+        prisma.like.findMany({ where: { userId: currentUserId }, select: { postId: true } }),
+        prisma.repost.findMany({ where: { userId: currentUserId }, select: { postId: true } }),
+    ])
+
+    const userLikeIds = new Set(userLikes.map((l) => l.postId))
+    const userRepostIds = new Set(userReposts.map((r) => r.postId))
+    const followedUserIds = new Set(followedIds)
+
+    return {
+        posts: posts.map((p) => ({
+            ...p,
+            isLikedByUser: userLikeIds.has(p.id),
+            isRepostedByUser: userRepostIds.has(p.id),
+            isFollowedByUser: followedUserIds.has(p.user?.id ?? -1),
+        })),
+        total,
+    }
+}
+
 export async function getNewestPostId(): Promise<number | null> {
     const post = await prisma.post.findFirst({
         orderBy: { createdAt: "desc" },

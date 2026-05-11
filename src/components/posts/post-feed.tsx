@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { PostWithMeta } from "@/lib/actions/posts"
 import PostCard from "./post-card"
@@ -16,7 +16,14 @@ interface PostFeedProps {
 
 export default function PostFeed({ posts, total, page, pageSize, currentUserId, emptyMessage = "No posts yet. Be the first to post!" }: PostFeedProps) {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const totalPages = Math.ceil(total / pageSize)
+
+    function buildPageUrl(newPage: number) {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set("page", String(newPage))
+        return `?${params.toString()}`
+    }
     const start = total === 0 ? 0 : (page - 1) * pageSize + 1
     const end = Math.min(page * pageSize, total)
 
@@ -42,7 +49,7 @@ export default function PostFeed({ posts, total, page, pageSize, currentUserId, 
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`?page=${page - 1}`)}
+                        onClick={() => router.push(buildPageUrl(page - 1))}
                         disabled={page <= 1}
                     >
                         Previous
@@ -53,7 +60,7 @@ export default function PostFeed({ posts, total, page, pageSize, currentUserId, 
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`?page=${page + 1}`)}
+                        onClick={() => router.push(buildPageUrl(page + 1))}
                         disabled={page >= totalPages}
                     >
                         Next
