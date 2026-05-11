@@ -135,6 +135,14 @@ export async function updateUser(
     }
 }
 
+export async function getUserByUsername(username: string): Promise<UserWithProfile | null> {
+    try {
+        return await prisma.user.findFirst({ where: { username }, select: userWithProfileSelect })
+    } catch {
+        return null
+    }
+}
+
 export async function getUserById(id: number): Promise<UserBase | null> {
     try {
         return await prisma.user.findUnique({ where: { id }, select: userBaseSelect });

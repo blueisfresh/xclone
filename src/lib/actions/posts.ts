@@ -212,6 +212,46 @@ export async function getReplies(
     }
 }
 
+export async function getPostsByUserId(
+    userId: number,
+    page = 1,
+    pageSize = POSTS_PAGE_SIZE,
+    currentUserId?: number
+): Promise<{ posts: PostWithMeta[]; total: number }> {
+    const skip = (page - 1) * pageSize
+    const where: Prisma.PostWhereInput = { userId, parentPostId: null }
+
+    const [posts, total, userLikes, userReposts, followRecord] = await Promise.all([
+        prisma.post.findMany({ where, select: postSelect, orderBy: { createdAt: "desc" }, skip, take: pageSize }),
+        prisma.post.count({ where }),
+        currentUserId
+            ? prisma.like.findMany({ where: { userId: currentUserId }, select: { postId: true } })
+            : Promise.resolve([]),
+        currentUserId
+            ? prisma.repost.findMany({ where: { userId: currentUserId }, select: { postId: true } })
+            : Promise.resolve([]),
+        currentUserId && currentUserId !== userId
+            ? prisma.userFollows.findUnique({
+                  where: { userId_followerId: { userId, followerId: currentUserId } },
+              })
+            : Promise.resolve(null),
+    ])
+
+    const likeIds = new Set(userLikes.map((l) => l.postId))
+    const repostIds = new Set(userReposts.map((r) => r.postId))
+    const isFollowedByUser = !!followRecord
+
+    return {
+        posts: posts.map((p) => ({
+            ...p,
+            isLikedByUser: likeIds.has(p.id),
+            isRepostedByUser: repostIds.has(p.id),
+            isFollowedByUser,
+        })),
+        total,
+    }
+}
+
 // ── Modal actions ──────────────────────────────────────────────────────────
 
 export async function createPostAction(

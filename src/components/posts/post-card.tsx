@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Heart, MessageCircle, Repeat2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -165,23 +166,37 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
             >
                 <div className="flex gap-3">
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0 select-none">
-                        {initials}
-                    </div>
+                    {author?.profile?.img ? (
+                        <img
+                            src={author.profile.img}
+                            alt={displayName}
+                            className="w-10 h-10 rounded-full object-cover shrink-0"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0 select-none">
+                            {initials}
+                        </div>
+                    )}
 
                     {/* Body */}
                     <div className="flex-1 min-w-0">
                         {/* Header row */}
                         <div className="flex items-center justify-between gap-2 mb-1">
                             <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-sm font-semibold text-foreground truncate">
-                                    {displayName}
-                                </span>
-                                {handle && (
-                                    <span className="text-xs text-muted-foreground truncate">
-                                        {handle}
+                                <Link
+                                    href={`/profile/${author?.username}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-1.5 min-w-0 hover:underline"
+                                >
+                                    <span className="text-sm font-semibold text-foreground truncate">
+                                        {displayName}
                                     </span>
-                                )}
+                                    {handle && (
+                                        <span className="text-xs text-muted-foreground truncate">
+                                            {handle}
+                                        </span>
+                                    )}
+                                </Link>
                                 <span className="text-xs text-muted-foreground shrink-0">·</span>
                                 <span className="text-xs text-muted-foreground shrink-0">
                                     {formatRelativeTime(post.createdAt)}
