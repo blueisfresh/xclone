@@ -161,7 +161,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
     return (
         <>
             <div
-                className="p-4 border-b border-border bg-background hover:bg-muted/30 transition-colors last:border-b-0 cursor-pointer"
+                className="p-4 border-b border-border/60 bg-background hover:bg-muted/40 transition-all duration-150 last:border-b-0 cursor-pointer hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
                 onClick={() => router.push(`/posts/${post.id}`)}
             >
                 <div className="flex gap-3">
@@ -173,7 +173,7 @@ export default function PostCard({ post, currentUserId }: PostCardProps) {
                             className="w-10 h-10 rounded-full object-cover shrink-0"
                         />
                     ) : (
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0 select-none">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0 select-none shadow-[0_1px_4px_rgba(0,0,0,0.10)] ring-1 ring-border/50">
                             {initials}
                         </div>
                     )}

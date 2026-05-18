@@ -30,7 +30,7 @@ export default function PostComposer() {
     return (
         <form
             action={formAction}
-            className="border border-border rounded-xl bg-background p-4 flex flex-col gap-3"
+            className="border border-border/70 rounded-xl bg-background p-4 flex flex-col gap-3 shadow-[0_2px_12px_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04)]"
         >
             <textarea
                 name="content"

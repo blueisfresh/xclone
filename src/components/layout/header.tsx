@@ -9,8 +9,8 @@ interface HeaderProps {
 
 export default function Header({ user }: HeaderProps) {
     return (
-        <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-            <div className="container mx-auto flex h-14 items-center justify-between px-4">
+        <header className="sticky top-0 z-40 w-full bg-background/90 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.06),0_4px_20px_rgba(0,0,0,0.05)]">
+            <div className="max-w-2xl mx-auto flex h-14 w-full items-center justify-between px-4">
 
                 {/* Left: logo + nav */}
                 <div className="flex items-center gap-4">

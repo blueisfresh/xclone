@@ -28,7 +28,7 @@ export default function ProfileMenu({ username }: ProfileMenuProps) {
             <Link
                 href="/profile"
                 onClick={(e) => { e.preventDefault(); setOpen((o) => !o) }}
-                className="flex items-center justify-center size-9 rounded-full bg-foreground text-background text-sm font-semibold hover:opacity-80 transition-opacity"
+                className="flex items-center justify-center size-9 rounded-full bg-foreground text-background text-sm font-semibold hover:opacity-80 transition-opacity shadow-[0_2px_8px_rgba(0,0,0,0.18)] ring-2 ring-background"
                 aria-label="Open profile menu"
             >
                 {username[0].toUpperCase()}
@@ -36,7 +36,7 @@ export default function ProfileMenu({ username }: ProfileMenuProps) {
 
             {/* Dropdown */}
             {open && (
-                <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-background shadow-md overflow-hidden z-50">
+                <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border/60 bg-background shadow-[0_8px_32px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.04] overflow-hidden z-50">
                     <Link
                         href="/profile"
                         onClick={() => setOpen(false)}

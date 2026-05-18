@@ -28,7 +28,7 @@ export default function PostFeed({ posts, total, page, pageSize, currentUserId, 
     const end = Math.min(page * pageSize, total)
 
     return (
-        <div className="border border-border rounded-xl overflow-hidden">
+        <div className="border border-border/70 rounded-xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04)]">
             {posts.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                     {emptyMessage}
