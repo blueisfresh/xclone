@@ -10,8 +10,8 @@ export function proxy(request: NextRequest) {
 
     const isPublicRoute = PUBLIC_ROUTES.has(pathname)
 
-    // Authenticated user hitting auth pages → send to home
-    if ((pathname === "/login" || pathname === "/signup") && sessionToken) {
+    // Authenticated user hitting public routes → send to home
+    if (isPublicRoute && sessionToken) {
         return NextResponse.redirect(new URL("/home", request.url))
     }
 
