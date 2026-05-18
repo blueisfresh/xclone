@@ -27,7 +27,8 @@ export default async function HomePage({
     ])
 
     return (
-        <div className="container mx-auto py-8 max-w-2xl">
+        <div className="min-h-screen bg-muted">
+        <div className="container mx-auto py-8 max-w-2xl px-4">
             <PostComposer />
             <div className="mt-6 flex flex-col gap-4">
                 <HomeTabs activeTab={tab} />
@@ -45,6 +46,7 @@ export default async function HomePage({
                     }
                 />
             </div>
+        </div>
         </div>
     )
 }
