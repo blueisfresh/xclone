@@ -1,6 +1,7 @@
 import Link from "next/link"
 import NavLinks from "./nav-links"
 import ProfileMenu from "./profile-menu"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { SessionUser } from "@/lib/actions/auth"
 
 interface HeaderProps {
@@ -22,8 +23,11 @@ export default function Header({ user }: HeaderProps) {
                     <NavLinks isAdmin={user.role.name === "ADMIN"} />
                 </div>
 
-                {/* Right: profile menu */}
-                <ProfileMenu username={user.username ?? user.email} />
+                {/* Right: theme toggle + profile menu */}
+                <div className="flex items-center gap-1">
+                    <ThemeToggle />
+                    <ProfileMenu username={user.username ?? user.email} />
+                </div>
             </div>
         </header>
     )
